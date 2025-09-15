@@ -32,8 +32,8 @@
           <div class="flex items-center justify-between">
             <p class="text-sm font-medium">{{ notification.message }}</p>
             <button
-              @click="globalStore.removeNotification(notification.id)"
               class="ml-2 text-white hover:text-gray-200 transition-colors"
+              @click="globalStore.removeNotification(notification.id)"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>

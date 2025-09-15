@@ -21,8 +21,8 @@
         </div>
 
         <button
-          @click="handleLogout"
           class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+          @click="handleLogout"
         >
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -77,9 +77,9 @@
               </p>
             </div>
             <button
-              @click="handleJoinRoom(room.short_code)"
               :disabled="roomsStore.isJoiningRoom"
               class="btn-secondary px-4 py-2 text-sm"
+              @click="handleJoinRoom(room.short_code)"
             >
               Rejoin
             </button>
@@ -98,7 +98,7 @@
         <div class="card w-full max-w-md p-6 animate-slide-up" @click.stop>
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Join Video Call</h3>
 
-          <form @submit.prevent="handleJoinSubmit" class="space-y-4">
+          <form class="space-y-4" @submit.prevent="handleJoinSubmit">
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Room Code or Link
@@ -115,9 +115,9 @@
             <div class="flex space-x-3">
               <button
                 type="button"
-                @click="showJoinModal = false"
                 class="btn-secondary flex-1"
                 :disabled="roomsStore.isJoiningRoom"
+                @click="showJoinModal = false"
               >
                 Cancel
               </button>

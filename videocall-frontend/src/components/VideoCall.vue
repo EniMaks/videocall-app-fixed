@@ -34,8 +34,8 @@
 
         <!-- Menu button -->
         <button
-          @click="showMenu = !showMenu"
           class="p-2 hover:bg-gray-800 rounded-full transition-colors relative"
+          @click="showMenu = !showMenu"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -53,8 +53,8 @@
             class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-2 z-50"
           >
             <button
-              @click="shareRoom"
               class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
+              @click="shareRoom"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -67,8 +67,8 @@
               <span>Share room</span>
             </button>
             <button
-              @click="showStats = !showStats"
               class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
+              @click="showStats = !showStats"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -82,8 +82,8 @@
             </button>
             <div class="border-t border-gray-200 dark:border-gray-600 my-2"></div>
             <button
-              @click="handleEndCall"
               class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center space-x-2"
+              @click="handleEndCall"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -152,8 +152,8 @@
             </p>
           </div>
           <button
-            @click="copyRoomCode"
             class="mt-4 bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-lg transition-colors inline-flex items-center space-x-2"
+            @click="copyRoomCode"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -262,12 +262,12 @@
       <div class="max-w-md mx-auto flex items-center justify-center space-x-6">
         <!-- Toggle Audio -->
         <button
-          @click="webrtcStore.toggleAudio"
           :class="[
             'control-button',
             webrtcStore.isAudioEnabled ? 'control-button-active' : 'control-button-danger',
           ]"
           :title="webrtcStore.isAudioEnabled ? 'Mute microphone' : 'Unmute microphone'"
+          @click="webrtcStore.toggleAudio"
         >
           <svg
             v-if="webrtcStore.isAudioEnabled"
@@ -295,12 +295,12 @@
 
         <!-- Toggle Video -->
         <button
-          @click="webrtcStore.toggleVideo"
           :class="[
             'control-button',
             webrtcStore.isVideoEnabled ? 'control-button-active' : 'control-button-danger',
           ]"
           :title="webrtcStore.isVideoEnabled ? 'Turn off camera' : 'Turn on camera'"
+          @click="webrtcStore.toggleVideo"
         >
           <svg
             v-if="webrtcStore.isVideoEnabled"
@@ -328,9 +328,9 @@
 
         <!-- Share Room -->
         <button
-          @click="shareRoom"
           class="control-button control-button-inactive"
           title="Share room"
+          @click="shareRoom"
         >
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -344,9 +344,9 @@
 
         <!-- End Call -->
         <button
-          @click="handleEndCall"
           class="control-button control-button-danger bg-red-500 hover:bg-red-600"
           title="End call"
+          @click="handleEndCall"
         >
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -386,7 +386,7 @@
                   readonly
                   class="input-field flex-1 font-mono text-center text-lg tracking-wider"
                 />
-                <button @click="copyRoomCode" class="btn-secondary px-4 py-3 min-w-[70px]">
+                <button class="btn-secondary px-4 py-3 min-w-[70px]" @click="copyRoomCode">
                   {{ roomCodeCopied ? 'Copied!' : 'Copy' }}
                 </button>
               </div>
@@ -398,7 +398,7 @@
               >
               <div class="flex items-center space-x-2">
                 <input :value="roomLink" readonly class="input-field flex-1 text-sm" />
-                <button @click="copyRoomLink" class="btn-secondary px-4 py-3 min-w-[70px]">
+                <button class="btn-secondary px-4 py-3 min-w-[70px]" @click="copyRoomLink">
                   {{ roomLinkCopied ? 'Copied!' : 'Copy' }}
                 </button>
               </div>
@@ -416,7 +416,7 @@
           </div>
 
           <div class="mt-6 flex justify-end">
-            <button @click="showShareModal = false" class="btn-primary px-6 py-2">Close</button>
+            <button class="btn-primary px-6 py-2" @click="showShareModal = false">Close</button>
           </div>
         </div>
       </div>
@@ -510,7 +510,7 @@
           </div>
 
           <div class="mt-6 flex justify-end">
-            <button @click="showStats = false" class="btn-primary px-6 py-2">Close</button>
+            <button class="btn-primary px-6 py-2" @click="showStats = false">Close</button>
           </div>
         </div>
       </div>

@@ -3,7 +3,6 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { apiService } from '../services/api'
 import { useGlobalStore } from './global'
-import { utils } from '../services/utils'
 
 export const useRoomsStore = defineStore('rooms', () => {
   const globalStore = useGlobalStore()

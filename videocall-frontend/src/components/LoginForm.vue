@@ -20,7 +20,7 @@
         <p class="text-gray-600 dark:text-gray-300">Enter the access password to continue</p>
       </div>
 
-      <form @submit.prevent="handleLogin" class="space-y-6">
+      <form class="space-y-6" @submit.prevent="handleLogin">
         <div>
           <label
             for="password"

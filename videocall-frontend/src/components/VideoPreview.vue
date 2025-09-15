@@ -19,13 +19,13 @@
         <div class="flex space-x-4">
           <!-- Video Toggle -->
           <button
-            @click="toggleVideo"
             :class="[
               'control-button transform hover:scale-110 transition-transform',
               webrtcStore.isVideoEnabled ? 'control-button-active' : 'control-button-inactive',
             ]"
             :title="webrtcStore.isVideoEnabled ? 'Turn off camera' : 'Turn on camera'"
             :disabled="!webrtcStore.localStream"
+            @click="toggleVideo"
           >
             <svg
               v-if="webrtcStore.isVideoEnabled"
@@ -53,13 +53,13 @@
 
           <!-- Audio Toggle -->
           <button
-            @click="toggleAudio"
             :class="[
               'control-button transform hover:scale-110 transition-transform',
               webrtcStore.isAudioEnabled ? 'control-button-active' : 'control-button-inactive',
             ]"
             :title="webrtcStore.isAudioEnabled ? 'Mute microphone' : 'Unmute microphone'"
             :disabled="!webrtcStore.localStream"
+            @click="toggleAudio"
           >
             <svg
               v-if="webrtcStore.isAudioEnabled"
@@ -87,9 +87,9 @@
 
           <!-- Settings Button -->
           <button
-            @click="showSettings = !showSettings"
             class="control-button control-button-inactive transform hover:scale-110 transition-transform"
             title="Video settings"
+            @click="showSettings = !showSettings"
           >
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -203,14 +203,14 @@
           <p class="text-sm text-yellow-700 dark:text-yellow-400 mt-1">{{ mediaError }}</p>
           <div class="mt-3 flex space-x-3">
             <button
-              @click="initializeMedia"
               class="text-sm bg-yellow-100 hover:bg-yellow-200 dark:bg-yellow-800 dark:hover:bg-yellow-700 text-yellow-800 dark:text-yellow-200 px-3 py-1 rounded-md font-medium transition-colors"
+              @click="initializeMedia"
             >
               Try again
             </button>
             <button
-              @click="showPermissionHelp = !showPermissionHelp"
               class="text-sm text-yellow-600 dark:text-yellow-400 underline hover:no-underline"
+              @click="showPermissionHelp = !showPermissionHelp"
             >
               Need help?
             </button>
@@ -244,7 +244,7 @@
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
           >Camera</label
         >
-        <select v-model="selectedVideoDevice" @change="switchVideoDevice" class="input-field">
+        <select v-model="selectedVideoDevice" class="input-field" @change="switchVideoDevice">
           <option v-for="device in videoDevices" :key="device.deviceId" :value="device.deviceId">
             {{ device.label || `Camera ${videoDevices.indexOf(device) + 1}` }}
           </option>
@@ -256,7 +256,7 @@
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
           >Microphone</label
         >
-        <select v-model="selectedAudioDevice" @change="switchAudioDevice" class="input-field">
+        <select v-model="selectedAudioDevice" class="input-field" @change="switchAudioDevice">
           <option v-for="device in audioDevices" :key="device.deviceId" :value="device.deviceId">
             {{ device.label || `Microphone ${audioDevices.indexOf(device) + 1}` }}
           </option>
@@ -268,7 +268,7 @@
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
           >Video Quality</label
         >
-        <select v-model="selectedQuality" @change="changeVideoQuality" class="input-field">
+        <select v-model="selectedQuality" class="input-field" @change="changeVideoQuality">
           <option value="720p">HD (720p)</option>
           <option value="480p">SD (480p)</option>
           <option value="360p">Low (360p)</option>
@@ -279,11 +279,11 @@
       <div class="flex items-center justify-between">
         <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Mirror video</label>
         <button
-          @click="shouldMirror = !shouldMirror"
           :class="[
             'relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2',
             shouldMirror ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-600',
           ]"
+          @click="shouldMirror = !shouldMirror"
         >
           <span
             :class="[
@@ -296,7 +296,7 @@
 
       <!-- Close Settings -->
       <div class="mt-4 flex justify-end">
-        <button @click="showSettings = false" class="btn-secondary px-4 py-2">Done</button>
+        <button class="btn-secondary px-4 py-2" @click="showSettings = false">Done</button>
       </div>
     </div>
   </div>
@@ -314,8 +314,6 @@ const {
   audioDevices,
   selectedVideoDevice,
   selectedAudioDevice,
-  switchVideoDevice: switchVideo,
-  switchAudioDevice: switchAudio,
 } = useMediaDevices()
 
 // Template refs

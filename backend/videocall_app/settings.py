@@ -145,7 +145,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  # Changed to allow custom auth
+        'rest_framework.permissions.IsAuthenticated',  # Changed to allow custom auth
     ],
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',
@@ -164,7 +164,7 @@ CORS_ALLOWED_ORIGINS = config(
 ).split(',')
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only in development
+
 
 # WebSocket origins for Channels
 ALLOWED_HOSTS_INCLUDE_WEBSOCKET = True
@@ -190,12 +190,6 @@ RATELIMIT_ENABLE = True
 # В файле backend/videocall_app/settings.py замените секцию LOGGING на:
 
 # Logging configuration
-import os
-
-# Создаем директорию для логов если её нет
-LOGS_DIR = BASE_DIR / 'logs'
-LOGS_DIR.mkdir(exist_ok=True)
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -204,22 +198,9 @@ LOGGING = {
             'format': '[{levelname}] {asctime} {name}: {message}',
             'style': '{',
         },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
-        },
     },
     'handlers': {
         'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
-        },
-        'file': {
-            'class': 'logging.FileHandler',
-            'filename': LOGS_DIR / 'django.log',
-            'formatter': 'verbose',
-        } if os.access(LOGS_DIR, os.W_OK) else {
-            # Fallback to console if can't write to file
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },

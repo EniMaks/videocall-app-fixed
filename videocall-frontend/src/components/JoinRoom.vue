@@ -42,18 +42,18 @@
         </div>
         <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Room Not Found</h3>
         <p class="text-gray-600 dark:text-gray-300 mb-4">{{ error }}</p>
-        <button @click="$router.push('/')" class="btn-primary px-6 py-2">Back to Dashboard</button>
+        <button class="btn-primary px-6 py-2" @click="$router.push('/')">Back to Dashboard</button>
       </div>
 
       <div v-else class="space-y-6">
         <div class="text-center">
-          <button @click="joinRoom" class="btn-primary w-full py-4 text-lg">Join Call</button>
+          <button class="btn-primary w-full py-4 text-lg" @click="joinRoom">Join Call</button>
         </div>
 
         <div class="text-center">
           <button
-            @click="$router.push('/')"
             class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            @click="$router.push('/')"
           >
             Back to Dashboard
           </button>
@@ -67,12 +67,10 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useRoomsStore } from '../stores/rooms'
-import { useGlobalStore } from '../stores/global'
 
 const route = useRoute()
 const router = useRouter()
 const roomsStore = useRoomsStore()
-const globalStore = useGlobalStore()
 
 const roomCode = ref('')
 const isJoining = ref(false)

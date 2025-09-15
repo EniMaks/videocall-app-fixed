@@ -26,10 +26,10 @@
       </p>
 
       <div class="space-y-4">
-        <button @click="$router.push('/')" class="btn-primary px-8 py-3 w-full">
+        <button class="btn-primary px-8 py-3 w-full" @click="$router.push('/')">
           Back to Dashboard
         </button>
-        <button @click="$router.go(-1)" class="btn-secondary px-8 py-3 w-full">Go Back</button>
+        <button class="btn-secondary px-8 py-3 w-full" @click="$router.go(-1)">Go Back</button>
       </div>
     </div>
   </div>

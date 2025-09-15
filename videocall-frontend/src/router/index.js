@@ -5,7 +5,7 @@ import { useRoomsStore } from '../stores/rooms'
 
 // Lazy load components for better performance
 const LoginForm = () => import('../components/LoginForm.vue')
-const Dashboard = () => import('../components/Dashboard.vue')
+const TheDashboard = () => import('../components/TheDashboard.vue')
 const VideoCall = () => import('../components/VideoCall.vue')
 const NotFound = () => import('../components/NotFound.vue')
 const JoinRoom = () => import('../components/JoinRoom.vue')
@@ -15,7 +15,7 @@ const routes = [
   {
     path: '/',
     name: 'Dashboard',
-    component: Dashboard,
+    component: TheDashboard,
     meta: {
       requiresAuth: true,
       title: 'Video Call Dashboard',
@@ -49,7 +49,7 @@ const routes = [
       preventLeave: true, // Show confirmation before leaving
     },
     props: true,
-    beforeEnter: async (to, from, next) => {
+    beforeEnter: async (to, _from, next) => {
       // Validate room ID format (UUID v4)
       const roomIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -73,7 +73,7 @@ const routes = [
       showInNav: false,
     },
     props: true,
-    beforeEnter: (to, from, next) => {
+    beforeEnter: (to, _from, next) => {
       // Validate short code format (6-8 alphanumeric characters)
       const shortCodePattern = /^[A-Z0-9]{6,8}$/i
 
@@ -220,13 +220,13 @@ router.beforeEach(async (to, from, next) => {
   await handleSpecialRoutes(to, from, next, { globalStore, roomsStore })
 })
 
-router.beforeResolve(async (to, from, next) => {
+router.beforeResolve(async (to, _from, next) => {
   // This runs after all in-component guards and async route components are resolved
   console.log(`Resolving route: ${to.name}`)
   next()
 })
 
-router.afterEach((to, from, failure) => {
+router.afterEach((to, _from, failure) => {
   const globalStore = useGlobalStore()
 
   // Clear loading state
@@ -243,7 +243,7 @@ router.afterEach((to, from, failure) => {
   }
 
   // Handle route-specific post-navigation logic
-  handlePostNavigation(to, from)
+  handlePostNavigation(to)
 })
 
 // Route-specific handlers
@@ -261,7 +261,7 @@ async function handleSpecialRoutes(to, from, next, { globalStore, roomsStore }) 
       }
       break
 
-    case 'JoinRoom':
+    case 'JoinRoom': {
       // Check if we already have room info
       const shortCode = to.params.shortCode
       if (roomsStore.currentRoom?.short_code === shortCode) {
@@ -270,6 +270,7 @@ async function handleSpecialRoutes(to, from, next, { globalStore, roomsStore }) 
         return
       }
       break
+    }
 
     case 'Dashboard':
       // Load room history when entering dashboard
@@ -323,13 +324,13 @@ function updateOpenGraphTags(to) {
 
 function trackPageView(to) {
   // Basic page view tracking (could be enhanced with analytics)
-  if (typeof gtag !== 'undefined') {
-    gtag('config', 'GA_MEASUREMENT_ID', {
-      page_title: to.meta.title,
-      page_location: window.location.href,
-      page_path: to.path,
-    })
-  }
+  // if (typeof gtag !== 'undefined') {
+  //   gtag('config', 'GA_MEASUREMENT_ID', {
+  //     page_title: to.meta.title,
+  //     page_location: window.location.href,
+  //     page_path: to.path,
+  //   })
+  // }
 
   // Custom analytics could go here
   console.log('Page view:', {
@@ -340,7 +341,7 @@ function trackPageView(to) {
   })
 }
 
-function handlePostNavigation(to, from) {
+function handlePostNavigation(to) {
   // Handle route-specific post-navigation tasks
 
   // Add body classes for styling
@@ -486,7 +487,7 @@ export const routeTransitions = {
 
 // Route middleware system
 const middlewares = {
-  auth: async (to, from, next) => {
+  auth: async (to, _from, next) => {
     const globalStore = useGlobalStore()
 
     if (!globalStore.isAuthenticated) {
@@ -501,7 +502,7 @@ const middlewares = {
     next()
   },
 
-  guest: (to, from, next) => {
+  guest: (to, _from, next) => {
     const globalStore = useGlobalStore()
 
     if (globalStore.isAuthenticated) {
@@ -512,7 +513,7 @@ const middlewares = {
     next()
   },
 
-  validateRoom: async (to, from, next) => {
+  validateRoom: async (to, _from, next) => {
     const roomsStore = useRoomsStore()
     const roomId = to.params.roomId
 
@@ -529,32 +530,8 @@ const middlewares = {
   },
 }
 
-// Apply middleware to routes
-function applyMiddleware(to, from, next, middlewareList = []) {
-  if (middlewareList.length === 0) {
-    next()
-    return
-  }
-
-  const middleware = middlewares[middlewareList[0]]
-
-  if (!middleware) {
-    console.warn(`Middleware ${middlewareList[0]} not found`)
-    applyMiddleware(to, from, next, middlewareList.slice(1))
-    return
-  }
-
-  middleware(to, from, (nextArg) => {
-    if (nextArg) {
-      next(nextArg)
-    } else {
-      applyMiddleware(to, from, next, middlewareList.slice(1))
-    }
-  })
-}
-
 // Error handling for navigation
-router.onError((error, to, from) => {
+router.onError((error) => {
   console.error('Router error:', error)
 
   const globalStore = useGlobalStore()

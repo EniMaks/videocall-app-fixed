@@ -30,7 +30,7 @@
             readonly
             class="input-field flex-1 font-mono text-lg text-center tracking-wider"
           />
-          <button @click="copyCode" class="btn-secondary px-4 py-3 min-w-[80px]">
+          <button class="btn-secondary px-4 py-3 min-w-[80px]" @click="copyCode">
             {{ codeCopied ? 'Copied!' : 'Copy' }}
           </button>
         </div>
@@ -43,7 +43,7 @@
         >
         <div class="flex items-center space-x-2">
           <input :value="room.room_url" readonly class="input-field flex-1 text-sm" />
-          <button @click="copyLink" class="btn-secondary px-4 py-3 min-w-[80px]">
+          <button class="btn-secondary px-4 py-3 min-w-[80px]" @click="copyLink">
             {{ linkCopied ? 'Copied!' : 'Copy' }}
           </button>
         </div>
@@ -59,8 +59,8 @@
 
       <!-- Action Buttons -->
       <div class="flex space-x-3">
-        <button @click="emit('close')" class="btn-secondary flex-1">Close</button>
-        <button @click="joinRoom" class="btn-primary flex-1">Join Room</button>
+        <button class="btn-secondary flex-1" @click="emit('close')">Close</button>
+        <button class="btn-primary flex-1" @click="joinRoom">Join Room</button>
       </div>
 
       <!-- Room Info -->
