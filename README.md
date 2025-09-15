@@ -123,7 +123,7 @@ sudo apt install nginx certbot python3-certbot-nginx
 
 **Получение сертификатов Let's Encrypt:**
 ```bash
-sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
+sudo certbot --nginx -d videocall.allisneed.ru -d www.videocall.allisneed.ru
 ```
 
 **Остановка системного Nginx после получения сертификатов:**
@@ -144,22 +144,22 @@ cp env.example .env
 # Основные настройки
 DEBUG=False
 SECRET_KEY=your-super-secret-django-key-here
-DOMAIN_NAME=yourdomain.com
+DOMAIN_NAME=videocall.allisneed.ru
 
 # База данных
 POSTGRES_PASSWORD=strong-database-password
 
 # Пути к SSL сертификатам
-SSL_CERT_PATH=/etc/letsencrypt/live/yourdomain.com/fullchain.pem
-SSL_KEY_PATH=/etc/letsencrypt/live/yourdomain.com/privkey.pem
+SSL_CERT_PATH=/etc/letsencrypt/live/videocall.allisneed.ru/fullchain.pem
+SSL_KEY_PATH=/etc/letsencrypt/live/videocall.allisneed.ru/privkey.pem
 
 # Домены
-ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
-CORS_ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+ALLOWED_HOSTS=videocall.allisneed.ru,www.videocall.allisneed.ru
+CORS_ALLOWED_ORIGINS=https://videocall.allisneed.ru,https://www.videocall.allisneed.ru
 ```
 
 **Обновите nginx.conf:**
-Замените `yourdomain.com` на ваш реальный домен в файле `nginx.conf`.
+Замените `videocall.allisneed.ru` на ваш реальный домен в файле `nginx.conf`.
 
 ### 7. Запуск приложения
 
@@ -180,10 +180,10 @@ docker-compose ps
 
 ### 8. Проверка работоспособности
 
-- **Frontend**: https://yourdomain.com
-- **Backend API**: https://yourdomain.com/api/health/
-- **Admin панель**: https://yourdomain.com/admin/
-- **WebSocket**: wss://yourdomain.com/ws/
+- **Frontend**: https://videocall.allisneed.ru
+- **Backend API**: https://videocall.allisneed.ru/api/health/
+- **Admin панель**: https://videocall.allisneed.ru/admin/
+- **WebSocket**: wss://videocall.allisneed.ru/ws/
 
 ## 🔧 Управление проектом
 
