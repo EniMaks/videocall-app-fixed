@@ -236,7 +236,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_ROOT = '/staticfiles'
 
 # Additional locations of static files
 STATICFILES_DIRS = []
