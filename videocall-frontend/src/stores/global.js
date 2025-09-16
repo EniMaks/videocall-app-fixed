@@ -2,6 +2,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { apiService } from '../services/api'
+import i18n from '../i18n' // Import i18n instance
 
 export const useGlobalStore = defineStore('global', () => {
   // State
@@ -22,12 +23,12 @@ export const useGlobalStore = defineStore('global', () => {
 
   const setLoading = (loading, message = '') => {
     isLoading.value = loading
-    loadingMessage.value = message
+    loadingMessage.value = message ? i18n.global.t(message) : ''
   }
 
   const addNotification = (message, type = 'info', duration = 5000) => {
     const id = Date.now() + Math.random()
-    const notification = { id, message, type }
+    const notification = { id, message: i18n.global.t(message), type }
 
     notifications.value.push(notification)
 
@@ -59,15 +60,15 @@ export const useGlobalStore = defineStore('global', () => {
   const setNetworkStatus = (online) => {
     isOnline.value = online
     if (online) {
-      addNotification('Connection restored', 'success', 3000)
+      addNotification('notifications.connectionRestored', 'success', 3000)
     } else {
-      addNotification('Connection lost. Some features may not work.', 'error', 0)
+      addNotification('notifications.connectionLost', 'error', 0)
     }
   }
 
   const checkAuthentication = async () => {
     try {
-      setLoading(true, 'Checking authentication...')
+      setLoading(true, 'loading.checkingAuth')
       const response = await apiService.checkAuth()
       setAuthenticated(response.data.authenticated)
     } catch (error) {
@@ -80,18 +81,18 @@ export const useGlobalStore = defineStore('global', () => {
 
   const login = async (password) => {
     try {
-      setLoading(true, 'Authenticating...')
+      setLoading(true, 'loading.authenticating')
       const response = await apiService.login(password)
 
       if (response.data.success) {
         setAuthenticated(true)
-        addNotification('Login successful', 'success', 3000)
+        addNotification('notifications.loginSuccess', 'success', 3000)
         return { success: true }
       } else {
-        return { success: false, error: 'Login failed' }
+        return { success: false, error: i18n.global.t('notifications.loginFailed') }
       }
     } catch (error) {
-      const errorMessage = error.response?.data?.error || 'Authentication failed'
+      const errorMessage = error.response?.data?.error || i18n.global.t('notifications.authFailed')
       addNotification(errorMessage, 'error', 5000)
       return { success: false, error: errorMessage }
     } finally {
@@ -103,12 +104,12 @@ export const useGlobalStore = defineStore('global', () => {
     try {
       await apiService.logout()
       setAuthenticated(false)
-      addNotification('Logged out successfully', 'info', 3000)
+      addNotification('notifications.logoutSuccess', 'info', 3000)
     } catch (error) {
       console.error('Logout failed:', error)
       // Force logout even if API call fails
       setAuthenticated(false)
-      addNotification('Logged out', 'info', 3000)
+      addNotification('notifications.loggedOut', 'info', 3000)
     }
   }
 

@@ -46,16 +46,16 @@
       <!-- Action Buttons -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
         <ActionCard
-          title="Create Link"
-          description="Start a new video call and share the link"
+          :title="$t('dashboard.createLinkTitle')"
+          :description="$t('dashboard.createLinkDesc')"
           icon="plus"
           :loading="roomsStore.isCreatingRoom"
           @click="handleCreateRoom"
         />
 
         <ActionCard
-          title="Join Call"
-          description="Enter a room code or link to join"
+          :title="$t('dashboard.joinCallTitle')"
+          :description="$t('dashboard.joinCallDesc')"
           icon="login"
           @click="showJoinModal = true"
         />
@@ -63,7 +63,7 @@
 
       <!-- Room History -->
       <div v-if="roomsStore.roomHistory.length > 0" class="mb-8">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Rooms</h2>
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{{ $t('dashboard.recentRooms') }}</h2>
         <div class="space-y-2">
           <div
             v-for="room in roomsStore.roomHistory.slice(0, 5)"
@@ -81,7 +81,7 @@
               class="btn-secondary px-4 py-2 text-sm"
               @click="handleJoinRoom(room.short_code)"
             >
-              Rejoin
+              {{ $t('dashboard.rejoinButton') }}
             </button>
           </div>
         </div>
@@ -96,17 +96,17 @@
         @click="showJoinModal = false"
       >
         <div class="card w-full max-w-md p-6 animate-slide-up" @click.stop>
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Join Video Call</h3>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{{ $t('dashboard.joinModalTitle') }}</h3>
 
           <form class="space-y-4" @submit.prevent="handleJoinSubmit">
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Room Code or Link
+                {{ $t('dashboard.joinModalLabel') }}
               </label>
               <input
                 v-model="joinInput"
                 type="text"
-                placeholder="Enter room code or paste link"
+                :placeholder="$t('dashboard.joinModalPlaceholder')"
                 class="input-field"
                 :disabled="roomsStore.isJoiningRoom"
               />
@@ -119,15 +119,15 @@
                 :disabled="roomsStore.isJoiningRoom"
                 @click="showJoinModal = false"
               >
-                Cancel
+                {{ $t('dashboard.cancelButton') }}
               </button>
               <button
                 type="submit"
                 :disabled="!joinInput.trim() || roomsStore.isJoiningRoom"
                 class="btn-primary flex-1 disabled:opacity-50"
               >
-                <span v-if="roomsStore.isJoiningRoom">Joining...</span>
-                <span v-else>Join</span>
+                <span v-if="roomsStore.isJoiningRoom">{{ $t('dashboard.joiningButton') }}</span>
+                <span v-else>{{ $t('dashboard.joinButton') }}</span>
               </button>
             </div>
           </form>

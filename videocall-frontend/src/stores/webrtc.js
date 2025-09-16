@@ -2,6 +2,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useGlobalStore } from './global'
+import i18n from '../i18n'
 
 export const useWebRTCStore = defineStore('webrtc', () => {
   const globalStore = useGlobalStore()
@@ -52,7 +53,7 @@ export const useWebRTCStore = defineStore('webrtc', () => {
   // Actions
   const initializeLocalMedia = async () => {
     try {
-      globalStore.setLoading(true, 'Accessing camera and microphone...')
+      globalStore.setLoading(true, 'loading.accessingMedia')
 
       localStream.value = await navigator.mediaDevices.getUserMedia(mediaConstraints.value)
 
@@ -69,19 +70,18 @@ export const useWebRTCStore = defineStore('webrtc', () => {
 
       return { success: true }
     } catch (error) {
-      let errorMessage = 'Failed to access camera or microphone'
+      let errorKey = 'webrtc.mediaAccessFailed'
 
       if (error.name === 'NotAllowedError') {
-        errorMessage =
-          'Camera and microphone access denied. Please allow permissions and try again.'
+        errorKey = 'webrtc.mediaAccessDenied'
       } else if (error.name === 'NotFoundError') {
-        errorMessage = 'No camera or microphone found on this device.'
+        errorKey = 'webrtc.noMediaDevice'
       } else if (error.name === 'NotReadableError') {
-        errorMessage = 'Camera or microphone is already in use by another application.'
+        errorKey = 'webrtc.mediaInUse'
       }
 
-      globalStore.addNotification(errorMessage, 'error', 8000)
-      return { success: false, error: errorMessage }
+      globalStore.addNotification(errorKey, 'error', 8000)
+      return { success: false, error: i18n.global.t(errorKey) }
     } finally {
       globalStore.setLoading(false)
     }
@@ -121,11 +121,11 @@ export const useWebRTCStore = defineStore('webrtc', () => {
 
         if (connectionState.value === 'connected') {
           isConnected.value = true
-          globalStore.addNotification('Video call connected', 'success', 3000)
+          globalStore.addNotification('webrtc.callConnected', 'success', 3000)
         } else if (connectionState.value === 'disconnected' || connectionState.value === 'failed') {
           isConnected.value = false
           if (connectionState.value === 'failed') {
-            globalStore.addNotification('Call connection failed', 'error', 5000)
+            globalStore.addNotification('webrtc.callFailed', 'error', 5000)
           }
         }
       }
@@ -168,7 +168,7 @@ export const useWebRTCStore = defineStore('webrtc', () => {
 
           if (event.code !== 1000) {
             // Not a normal closure
-            globalStore.addNotification('Connection lost', 'error', 5000)
+            globalStore.addNotification('webrtc.wsConnectionLost', 'error', 5000)
           }
         }
 
@@ -239,7 +239,7 @@ export const useWebRTCStore = defineStore('webrtc', () => {
       })
     }
 
-    globalStore.addNotification('Someone joined the call', 'info', 3000)
+    globalStore.addNotification('webrtc.userJoined', 'info', 3000)
 
     // If we are already in the room, send an offer to the new participant
     if (peerConnection.value && localStream.value) {
@@ -252,7 +252,7 @@ export const useWebRTCStore = defineStore('webrtc', () => {
 
     remoteParticipants.value = remoteParticipants.value.filter((p) => p.id !== participantId)
 
-    globalStore.addNotification('Someone left the call', 'info', 3000)
+    globalStore.addNotification('webrtc.userLeft', 'info', 3000)
 
     // Clear remote stream if this was the connected peer
     if (remoteStream.value) {
@@ -346,7 +346,7 @@ export const useWebRTCStore = defineStore('webrtc', () => {
         })
 
         globalStore.addNotification(
-          isVideoEnabled.value ? 'Camera turned on' : 'Camera turned off',
+          isVideoEnabled.value ? 'webrtc.cameraOn' : 'webrtc.cameraOff',
           'info',
           2000,
         )
@@ -371,7 +371,7 @@ export const useWebRTCStore = defineStore('webrtc', () => {
         })
 
         globalStore.addNotification(
-          isAudioEnabled.value ? 'Microphone turned on' : 'Microphone turned off',
+          isAudioEnabled.value ? 'webrtc.micOn' : 'webrtc.micOff',
           'info',
           2000,
         )

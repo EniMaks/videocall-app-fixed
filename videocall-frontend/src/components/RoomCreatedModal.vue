@@ -15,14 +15,14 @@
             ></path>
           </svg>
         </div>
-        <h3 class="text-xl font-semibold text-gray-900 dark:text-white">Room Created!</h3>
-        <p class="text-gray-600 dark:text-gray-300 mt-2">Share the link or code to invite others</p>
+        <h3 class="text-xl font-semibold text-gray-900 dark:text-white">{{ $t('roomCreatedModal.title') }}</h3>
+        <p class="text-gray-600 dark:text-gray-300 mt-2">{{ $t('roomCreatedModal.subtitle') }}</p>
       </div>
 
       <!-- Room Code -->
       <div class="mb-6">
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >Room Code</label
+          >{{ $t('roomCreatedModal.roomCode') }}</label
         >
         <div class="flex items-center space-x-2">
           <input
@@ -31,7 +31,7 @@
             class="input-field flex-1 font-mono text-lg text-center tracking-wider"
           />
           <button class="btn-secondary px-4 py-3 min-w-[80px]" @click="copyCode">
-            {{ codeCopied ? 'Copied!' : 'Copy' }}
+            {{ codeCopied ? $t('roomCreatedModal.copied') : $t('roomCreatedModal.copy') }}
           </button>
         </div>
       </div>
@@ -39,19 +39,19 @@
       <!-- Room Link -->
       <div class="mb-6">
         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >Room Link</label
+          >{{ $t('roomCreatedModal.roomLink') }}</label
         >
         <div class="flex items-center space-x-2">
           <input :value="room.room_url" readonly class="input-field flex-1 text-sm" />
           <button class="btn-secondary px-4 py-3 min-w-[80px]" @click="copyLink">
-            {{ linkCopied ? 'Copied!' : 'Copy' }}
+            {{ linkCopied ? $t('roomCreatedModal.copied') : $t('roomCreatedModal.copy') }}
           </button>
         </div>
       </div>
 
       <!-- QR Code -->
       <div class="mb-6 text-center">
-        <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">QR Code</p>
+        <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{{ $t('roomCreatedModal.qrCode') }}</p>
         <div class="inline-block p-4 bg-white rounded-xl shadow-sm">
           <img :src="room.qr_code" alt="QR Code" class="w-32 h-32" />
         </div>
@@ -59,14 +59,14 @@
 
       <!-- Action Buttons -->
       <div class="flex space-x-3">
-        <button class="btn-secondary flex-1" @click="emit('close')">Close</button>
-        <button class="btn-primary flex-1" @click="joinRoom">Join Room</button>
+        <button class="btn-secondary flex-1" @click="emit('close')">{{ $t('roomCreatedModal.close') }}</button>
+        <button class="btn-primary flex-1" @click="joinRoom">{{ $t('roomCreatedModal.joinRoom') }}</button>
       </div>
 
       <!-- Room Info -->
       <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 text-center">
         <p class="text-xs text-gray-500 dark:text-gray-400">
-          Room expires in {{ formatExpiryTime(room.expires_at) }}
+          {{ $t('roomCreatedModal.expiresIn', { time: formatExpiryTime(room.expires_at) }) }}
         </p>
       </div>
     </div>
@@ -76,9 +76,11 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { utils } from '../services/utils'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const props = defineProps({
   room: {
@@ -125,12 +127,12 @@ const formatExpiryTime = (expiryDate) => {
   const diffHours = Math.ceil((expiry - now) / (1000 * 60 * 60))
 
   if (diffHours <= 1) {
-    return 'less than 1 hour'
+    return t('roomCreatedModal.lessThanHour')
   } else if (diffHours < 24) {
-    return `${diffHours} hours`
+    return t('roomCreatedModal.hours', diffHours)
   } else {
     const diffDays = Math.ceil(diffHours / 24)
-    return `${diffDays} days`
+    return t('roomCreatedModal.days', diffDays)
   }
 }
 </script>

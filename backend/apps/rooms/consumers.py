@@ -68,8 +68,11 @@ class VideoCallConsumer(AsyncWebsocketConsumer):
 
             logger.info(f"User {self.participant_id} connected to room {self.room_id}")
 
+        except KeyError:
+            logger.warning("WebSocket connection attempt with invalid URL (missing room_id).")
+            await self.close(code=4000)
         except Exception as e:
-            logger.error(f"WebSocket connection error: {e}")
+            logger.error(f"WebSocket connection error: {e}", exc_info=True)
             await self.close(code=4000)
 
     async def disconnect(self, close_code):
@@ -98,7 +101,7 @@ class VideoCallConsumer(AsyncWebsocketConsumer):
             logger.info(f"User {self.participant_id} disconnected from room {self.room_id}")
 
         except Exception as e:
-            logger.error(f"WebSocket disconnect error: {e}")
+            logger.error(f"WebSocket disconnect error: {e}", exc_info=True)
 
     async def receive(self, text_data):
         """Handle incoming WebSocket messages"""
@@ -112,23 +115,27 @@ class VideoCallConsumer(AsyncWebsocketConsumer):
                 return
 
             # Handle different message types
-            if message_type == 'offer':
-                await self.handle_webrtc_offer(data)
-            elif message_type == 'answer':
-                await self.handle_webrtc_answer(data)
-            elif message_type == 'ice_candidate':
-                await self.handle_ice_candidate(data)
-            elif message_type == 'ping':
-                await self.handle_ping()
-            elif message_type == 'media_state':
-                await self.handle_media_state(data)
+            handler_map = {
+                'offer': self.handle_webrtc_offer,
+                'answer': self.handle_webrtc_answer,
+                'ice_candidate': self.handle_ice_candidate,
+                'ping': self.handle_ping,
+                'media_state': self.handle_media_state,
+            }
+            handler = handler_map.get(message_type)
+
+            if handler:
+                await handler(data)
             else:
                 await self.send_error(f'Unknown message type: {message_type}')
 
         except json.JSONDecodeError:
             await self.send_error('Invalid JSON format')
+        except (KeyError, TypeError) as e:
+            logger.warning(f"Invalid message format: {e}")
+            await self.send_error(f'Invalid message format: {e}')
         except Exception as e:
-            logger.error(f"WebSocket receive error: {e}")
+            logger.error(f"WebSocket receive error: {e}", exc_info=True)
             await self.send_error('Message processing failed')
 
     async def handle_webrtc_offer(self, data):
@@ -154,7 +161,7 @@ class VideoCallConsumer(AsyncWebsocketConsumer):
             )
 
         except Exception as e:
-            logger.error(f"WebRTC offer handling error: {e}")
+            logger.error(f"WebRTC offer handling error: {e}", exc_info=True)
             await self.send_error('Failed to process offer')
 
     async def handle_webrtc_answer(self, data):
@@ -180,7 +187,7 @@ class VideoCallConsumer(AsyncWebsocketConsumer):
             )
 
         except Exception as e:
-            logger.error(f"WebRTC answer handling error: {e}")
+            logger.error(f"WebRTC answer handling error: {e}", exc_info=True)
             await self.send_error('Failed to process answer')
 
     async def handle_ice_candidate(self, data):
@@ -206,7 +213,7 @@ class VideoCallConsumer(AsyncWebsocketConsumer):
             )
 
         except Exception as e:
-            logger.error(f"ICE candidate handling error: {e}")
+            logger.error(f"ICE candidate handling error: {e}", exc_info=True)
             await self.send_error('Failed to process ICE candidate')
 
     async def handle_ping(self):
@@ -233,7 +240,7 @@ class VideoCallConsumer(AsyncWebsocketConsumer):
             )
 
         except Exception as e:
-            logger.error(f"Media state handling error: {e}")
+            logger.error(f"Media state handling error: {e}", exc_info=True)
             await self.send_error('Failed to process media state')
 
     # Group message handlers

@@ -6,7 +6,7 @@
       class="bg-gray-900 text-white p-4 flex items-center justify-between z-10 safe-area-inset"
     >
       <div class="flex items-center space-x-4">
-        <h1 class="text-lg font-medium">Room {{ roomInfo?.short_code }}</h1>
+        <h1 class="text-lg font-medium">{{ $t('videoCall.roomTitle', { code: roomInfo?.short_code }) }}</h1>
         <div class="flex items-center space-x-2 text-sm text-gray-300">
           <div :class="['w-2 h-2 rounded-full animate-pulse', connectionStatusColor]"></div>
           <span>{{ connectionStatusText }}</span>
@@ -64,7 +64,7 @@
                   d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
                 ></path>
               </svg>
-              <span>Share room</span>
+              <span>{{ $t('videoCall.shareRoom') }}</span>
             </button>
             <button
               class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center space-x-2"
@@ -78,7 +78,7 @@
                   d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                 ></path>
               </svg>
-              <span>Connection stats</span>
+              <span>{{ $t('videoCall.connectionStats') }}</span>
             </button>
             <div class="border-t border-gray-200 dark:border-gray-600 my-2"></div>
             <button
@@ -93,7 +93,7 @@
                   d="M16 8l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 3l18 18"
                 ></path>
               </svg>
-              <span>End call</span>
+              <span>{{ $t('videoCall.endCall') }}</span>
             </button>
           </div>
         </button>
@@ -145,7 +145,7 @@
             </svg>
           </div>
           <h3 class="text-xl font-medium mb-2">{{ waitingMessage }}</h3>
-          <p class="text-gray-400 mb-4">Share the room code to invite someone:</p>
+          <p class="text-gray-400 mb-4">{{ $t('videoCall.invitePrompt') }}</p>
           <div class="bg-gray-800 px-4 py-3 rounded-xl">
             <p class="font-mono font-bold text-2xl tracking-wider text-green-400">
               {{ roomInfo?.short_code }}
@@ -163,7 +163,7 @@
                 d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
               ></path>
             </svg>
-            <span>{{ roomCodeCopied ? 'Copied!' : 'Copy Code' }}</span>
+            <span>{{ roomCodeCopied ? $t('videoCall.copied') : $t('videoCall.copyCode') }}</span>
           </button>
         </div>
       </div>
@@ -266,7 +266,7 @@
             'control-button',
             webrtcStore.isAudioEnabled ? 'control-button-active' : 'control-button-danger',
           ]"
-          :title="webrtcStore.isAudioEnabled ? 'Mute microphone' : 'Unmute microphone'"
+          :title="webrtcStore.isAudioEnabled ? $t('videoCall.muteMic') : $t('videoCall.unmuteMic')"
           @click="webrtcStore.toggleAudio"
         >
           <svg
@@ -299,7 +299,7 @@
             'control-button',
             webrtcStore.isVideoEnabled ? 'control-button-active' : 'control-button-danger',
           ]"
-          :title="webrtcStore.isVideoEnabled ? 'Turn off camera' : 'Turn on camera'"
+          :title="webrtcStore.isVideoEnabled ? $t('videoCall.turnOffCam') : $t('videoCall.turnOnCam')"
           @click="webrtcStore.toggleVideo"
         >
           <svg
@@ -329,7 +329,7 @@
         <!-- Share Room -->
         <button
           class="control-button control-button-inactive"
-          title="Share room"
+          :title="$t('videoCall.shareRoom')"
           @click="shareRoom"
         >
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -345,7 +345,7 @@
         <!-- End Call -->
         <button
           class="control-button control-button-danger bg-red-500 hover:bg-red-600"
-          title="End call"
+          :title="$t('videoCall.endCall')"
           @click="handleEndCall"
         >
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -373,12 +373,12 @@
         @click="showShareModal = false"
       >
         <div class="card w-full max-w-md p-6 animate-slide-up" @click.stop>
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Share Room</h3>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">{{ $t('videoCall.shareModalTitle') }}</h3>
 
           <div class="space-y-4">
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >Room Code</label
+                >{{ $t('videoCall.roomCode') }}</label
               >
               <div class="flex items-center space-x-2">
                 <input
@@ -387,19 +387,19 @@
                   class="input-field flex-1 font-mono text-center text-lg tracking-wider"
                 />
                 <button class="btn-secondary px-4 py-3 min-w-[70px]" @click="copyRoomCode">
-                  {{ roomCodeCopied ? 'Copied!' : 'Copy' }}
+                  {{ roomCodeCopied ? $t('videoCall.copied') : $t('videoCall.copy') }}
                 </button>
               </div>
             </div>
 
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >Room Link</label
+                >{{ $t('videoCall.roomLink') }}</label
               >
               <div class="flex items-center space-x-2">
                 <input :value="roomLink" readonly class="input-field flex-1 text-sm" />
                 <button class="btn-secondary px-4 py-3 min-w-[70px]" @click="copyRoomLink">
-                  {{ roomLinkCopied ? 'Copied!' : 'Copy' }}
+                  {{ roomLinkCopied ? $t('videoCall.copied') : $t('videoCall.copy') }}
                 </button>
               </div>
             </div>
@@ -407,7 +407,7 @@
             <!-- QR Code (if available) -->
             <div v-if="qrCodeUrl" class="text-center">
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >QR Code</label
+                >{{ $t('videoCall.qrCode') }}</label
               >
               <div class="inline-block p-3 bg-white rounded-lg">
                 <img :src="qrCodeUrl" alt="Room QR Code" class="w-32 h-32" />
@@ -416,7 +416,7 @@
           </div>
 
           <div class="mt-6 flex justify-end">
-            <button class="btn-primary px-6 py-2" @click="showShareModal = false">Close</button>
+            <button class="btn-primary px-6 py-2" @click="showShareModal = false">{{ $t('videoCall.close') }}</button>
           </div>
         </div>
       </div>
@@ -431,7 +431,7 @@
       >
         <div class="card w-full max-w-lg p-6 animate-slide-up max-h-96 overflow-y-auto" @click.stop>
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            Connection Statistics
+            {{ $t('videoCall.statsModalTitle') }}
           </h3>
 
           <div v-if="connectionStats" class="space-y-4 text-sm">
@@ -439,7 +439,7 @@
             <div
               class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
             >
-              <span class="font-medium">Connection Quality</span>
+              <span class="font-medium">{{ $t('videoCall.quality') }}</span>
               <div class="flex items-center space-x-2">
                 <div
                   :class="[
@@ -457,18 +457,18 @@
 
             <!-- Video Stats -->
             <div v-if="connectionStats.video">
-              <h4 class="font-medium text-gray-900 dark:text-white mb-2">Video</h4>
+              <h4 class="font-medium text-gray-900 dark:text-white mb-2">{{ $t('videoCall.video') }}</h4>
               <div class="space-y-2 pl-4">
                 <div class="flex justify-between">
-                  <span>Resolution</span>
+                  <span>{{ $t('videoCall.resolution') }}</span>
                   <span>{{ videoResolution }}</span>
                 </div>
                 <div class="flex justify-between">
-                  <span>Frame Rate</span>
+                  <span>{{ $t('videoCall.frameRate') }}</span>
                   <span>{{ videoFrameRate }} fps</span>
                 </div>
                 <div class="flex justify-between">
-                  <span>Bitrate</span>
+                  <span>{{ $t('videoCall.bitrate') }}</span>
                   <span>{{ videoBitrate }} kbps</span>
                 </div>
               </div>
@@ -476,10 +476,10 @@
 
             <!-- Audio Stats -->
             <div v-if="connectionStats.audio">
-              <h4 class="font-medium text-gray-900 dark:text-white mb-2">Audio</h4>
+              <h4 class="font-medium text-gray-900 dark:text-white mb-2">{{ $t('videoCall.audio') }}</h4>
               <div class="space-y-2 pl-4">
                 <div class="flex justify-between">
-                  <span>Bitrate</span>
+                  <span>{{ $t('videoCall.bitrate') }}</span>
                   <span>{{ audioBitrate }} kbps</span>
                 </div>
               </div>
@@ -487,18 +487,18 @@
 
             <!-- Connection Stats -->
             <div v-if="connectionStats.connection">
-              <h4 class="font-medium text-gray-900 dark:text-white mb-2">Connection</h4>
+              <h4 class="font-medium text-gray-900 dark:text-white mb-2">{{ $t('videoCall.connection') }}</h4>
               <div class="space-y-2 pl-4">
                 <div class="flex justify-between">
-                  <span>Round Trip Time</span>
+                  <span>{{ $t('videoCall.roundTripTime') }}</span>
                   <span>{{ roundTripTime }} ms</span>
                 </div>
                 <div class="flex justify-between">
-                  <span>Bandwidth</span>
+                  <span>{{ $t('videoCall.bandwidth') }}</span>
                   <span>{{ bandwidth }} kbps</span>
                 </div>
                 <div class="flex justify-between">
-                  <span>Packet Loss</span>
+                  <span>{{ $t('videoCall.packetLoss') }}</span>
                   <span>{{ packetLoss }}%</span>
                 </div>
               </div>
@@ -506,11 +506,11 @@
           </div>
 
           <div v-else class="text-center py-8 text-gray-500">
-            <p>No connection statistics available</p>
+            <p>{{ $t('videoCall.noStats') }}</p>
           </div>
 
           <div class="mt-6 flex justify-end">
-            <button class="btn-primary px-6 py-2" @click="showStats = false">Close</button>
+            <button class="btn-primary px-6 py-2" @click="showStats = false">{{ $t('videoCall.close') }}</button>
           </div>
         </div>
       </div>

@@ -2,6 +2,7 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import router from './router'
+import i18n from './i18n'
 import App from './App.vue'
 import { apiService } from './services/api'
 import './style.css'
@@ -11,6 +12,7 @@ const pinia = createPinia()
 
 app.use(pinia)
 app.use(router)
+app.use(i18n)
 
 // Initialize API service with CSRF token
 apiService

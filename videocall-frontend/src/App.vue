@@ -1,6 +1,9 @@
 // src/App.vue - Main application component
 <template>
   <div id="app" class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+    <header class="absolute top-0 right-0 p-4 z-20">
+      <LanguageSwitcher />
+    </header>
     <router-view />
 
     <!-- Global loading indicator -->
@@ -49,6 +52,7 @@
 <script setup>
 import { onMounted } from 'vue'
 import { useGlobalStore } from './stores/global'
+import LanguageSwitcher from './components/LanguageSwitcher.vue' // Import the component
 
 const globalStore = useGlobalStore()
 
