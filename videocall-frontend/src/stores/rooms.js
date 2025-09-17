@@ -42,7 +42,7 @@ export const useRoomsStore = defineStore('rooms', () => {
       }
 
       addToHistory(currentRoom.value)
-      globalStore.addNotification('Room created successfully', 'success', 3000)
+      globalStore.addNotification('notifications.roomCreated', 'success', 3000)
 
       return { success: true, room: currentRoom.value }
     } catch (error) {

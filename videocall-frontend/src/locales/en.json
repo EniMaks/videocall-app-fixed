@@ -19,7 +19,8 @@
     "failedToConnect": "Failed to connect to room. Please try again.",
     "failedToJoin": "Failed to join call",
     "roomCodeCopied": "Room code copied!",
-    "roomLinkCopied": "Room link copied!"
+    "roomLinkCopied": "Room link copied!",
+    "roomCreated": "Room created successfully"
   },
   "loading": {
     "checkingAuth": "Checking authentication...",
