@@ -532,6 +532,11 @@
   </div>
 </template>
 
+<script>
+export default {
+  name: 'VideoCall'
+}
+</script>
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -918,6 +923,7 @@ const vClickOutside = {
 
 // Lifecycle
 onMounted(() => {
+  console.log('VideoCall component mounted');
   initializeCall()
   durationInterval = setInterval(updateCallDuration, 1000)
 })
