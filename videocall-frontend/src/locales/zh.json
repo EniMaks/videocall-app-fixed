@@ -68,7 +68,7 @@
     "joinButton": "加入"
   },
   "videoCall": {
-    "roomTitle": "房间 {{code}}",
+    "roomTitle": "房间 {code}",
     "shareRoom": "分享房间",
     "connectionStats": "连接统计",
     "endCall": "结束通话",
@@ -132,10 +132,10 @@
     "copied": "已复制！",
     "close": "关闭",
     "joinRoom": "加入房间",
-    "expiresIn": "房间在 {{time}} 内过期",
+    "expiresIn": "房间在 {time} 内过期",
     "lessThanHour": "不到 1 小时",
-    "hours": "{{count}} 小时",
-    "days": "{{count}} 天"
+    "hours": "{count} 小时",
+    "days": "{count} 天"
   },
   "notFound": {
     "title": "找不到页面",

@@ -139,7 +139,8 @@
   },
   "notFound": {
     "title": "Página não encontrada",
-    "subtitle": "A página que você está procurando не существует или может быть перемещена.",
+    "subtitle": "  "subtitle": "A página que você está procurando не существует или может быть перемещена.",
+",
     "dashboardButton": "Voltar ao painel",
     "backButton": "Voltar"
   },

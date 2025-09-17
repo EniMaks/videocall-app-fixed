@@ -15,7 +15,7 @@
     "authFailed": "Authentifizierung fehlgeschlagen",
     "logoutSuccess": "Abmeldung erfolgreich",
     "loggedOut": "Abgemeldet",
-    "roomNotFound": "Raum не найден или abgelaufen",
+    "roomNotFound": "Raum не найден oder abgelaufen",
     "failedToConnect": "Verbindung zum Raum fehlgeschlagen. Bitte versuchen Sie es erneut.",
     "failedToJoin": "Beitritt zum Anruf fehlgeschlagen",
     "roomCodeCopied": "Raumcode kopiert!",
@@ -68,7 +68,7 @@
     "joinButton": "Beitreten"
   },
   "videoCall": {
-    "roomTitle": "Raum {{code}}",
+    "roomTitle": "Raum {code}",
     "shareRoom": "Raum teilen",
     "connectionStats": "Verbindungsstatistik",
     "endCall": "Anruf beenden",
@@ -132,10 +132,10 @@
     "copied": "Kopiert!",
     "close": "Schließen",
     "joinRoom": "Raum beitreten",
-    "expiresIn": "Raum läuft in {{time}} ab",
+    "expiresIn": "Raum läuft in {time} ab",
     "lessThanHour": "weniger als 1 Stunde",
-    "hours": "{{count}} Stunden",
-    "days": "{{count}} Tage"
+    "hours": "{count} Stunden",
+    "days": "{count} Tage"
   },
   "notFound": {
     "title": "Seite nicht gefunden",

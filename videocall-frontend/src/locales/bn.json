@@ -68,7 +68,7 @@
     "joinButton": "যোগ দিন"
   },
   "videoCall": {
-    "roomTitle": "রুম {{code}}",
+    "roomTitle": "রুম {code}",
     "shareRoom": "রুম শেয়ার করুন",
     "connectionStats": "সংযোগ পরিসংখ্যান",
     "endCall": "কল শেষ করুন",
@@ -132,10 +132,10 @@
     "copied": "কপি করা হয়েছে!",
     "close": "বন্ধ করুন",
     "joinRoom": "রুমে যোগ দিন",
-    "expiresIn": "রুম {{time}} এর মধ্যে মেয়াদ শেষ হয়ে যাবে",
+    "expiresIn": "রুম {time} এর মধ্যে মেয়াদ শেষ হয়ে যাবে",
     "lessThanHour": "1 ঘন্টারও কম",
-    "hours": "{{count}} ঘন্টা",
-    "days": "{{count}} দিন"
+    "hours": "{count} ঘন্টা",
+    "days": "{count} দিন"
   },
   "notFound": {
     "title": "পৃষ্ঠা পাওয়া যায়নি",

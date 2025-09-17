@@ -68,7 +68,7 @@
     "joinButton": "Rejoindre"
   },
   "videoCall": {
-    "roomTitle": "Salle {{code}}",
+    "roomTitle": "Salle {code}",
     "shareRoom": "Partager la salle",
     "connectionStats": "Statistiques de connexion",
     "endCall": "Terminer l'appel",
@@ -132,10 +132,10 @@
     "copied": "Copié !",
     "close": "Fermer",
     "joinRoom": "Rejoindre la salle",
-    "expiresIn": "La salle expire dans {{time}}",
+    "expiresIn": "La salle expire dans {time}",
     "lessThanHour": "moins d'une heure",
-    "hours": "{{count}} heures",
-    "days": "{{count}} jours"
+    "hours": "{count} heures",
+    "days": "{count} jours"
   },
   "notFound": {
     "title": "Page non trouvée",
