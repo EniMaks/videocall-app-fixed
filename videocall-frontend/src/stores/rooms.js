@@ -9,6 +9,8 @@ export const useRoomsStore = defineStore('rooms', () => {
 
   // State
   const currentRoom = ref(null)
+  const createdRoom = ref(null) // Add this
+  const showRoomCreatedModal = ref(false) // Add this
   const roomHistory = ref([])
   const isCreatingRoom = ref(false)
   const isJoiningRoom = ref(false)
@@ -23,6 +25,16 @@ export const useRoomsStore = defineStore('rooms', () => {
   const canJoinRoom = computed(() => !isJoiningRoom.value && !hasActiveRoom.value)
 
   // Actions
+  const openRoomCreatedModal = (room) => {
+    createdRoom.value = room
+    showRoomCreatedModal.value = true
+  }
+
+  const closeRoomCreatedModal = () => {
+    showRoomCreatedModal.value = false
+    createdRoom.value = null
+  }
+
   const createRoom = async () => {
     try {
       isCreatingRoom.value = true
@@ -31,7 +43,7 @@ export const useRoomsStore = defineStore('rooms', () => {
       const response = await apiService.createRoom()
       const roomData = response.data
 
-      currentRoom.value = {
+      const newRoom = {
         room_id: roomData.room_id,
         short_code: roomData.short_code,
         room_url: roomData.room_url,
@@ -41,10 +53,12 @@ export const useRoomsStore = defineStore('rooms', () => {
         created_at: new Date().toISOString(),
       }
 
-      addToHistory(currentRoom.value)
+      addToHistory(newRoom)
       globalStore.addNotification('notifications.roomCreated', 'success', 3000)
+      
+      openRoomCreatedModal(newRoom) // Use the action
 
-      return { success: true, room: currentRoom.value }
+      return { success: true, room: newRoom }
     } catch (error) {
       console.error('Failed to create room:', error)
       const errorMessage = error.response?.data?.error || 'Failed to create room'

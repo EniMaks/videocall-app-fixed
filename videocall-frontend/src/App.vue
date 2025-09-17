@@ -4,7 +4,11 @@
     <header class="absolute top-0 right-0 p-4 z-20">
       <LanguageSwitcher />
     </header>
-    <router-view />
+    <router-view v-slot="{ Component }">
+      <keep-alive include="VideoCall">
+        <component :is="Component" />
+      </keep-alive>
+    </router-view>
 
     <!-- Global loading indicator -->
     <Teleport to="body">

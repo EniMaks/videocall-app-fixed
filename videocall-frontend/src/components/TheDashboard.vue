@@ -50,7 +50,7 @@
           :description="$t('dashboard.createLinkDesc')"
           icon="plus"
           :loading="roomsStore.isCreatingRoom"
-          @click="handleCreateRoom"
+          @click="roomsStore.createRoom"
         />
 
         <ActionCard
@@ -137,9 +137,9 @@
 
     <!-- Room Created Modal -->
     <RoomCreatedModal
-      v-if="showRoomCreatedModal && createdRoom"
-      :room="createdRoom"
-      @close="showRoomCreatedModal = false"
+      v-if="roomsStore.showRoomCreatedModal && roomsStore.createdRoom"
+      :room="roomsStore.createdRoom"
+      @close="roomsStore.closeRoomCreatedModal"
     />
   </div>
 </template>
@@ -160,23 +160,12 @@ const roomsStore = useRoomsStore()
 
 // Reactive state
 const showJoinModal = ref(false)
-const showRoomCreatedModal = ref(false)
 const joinInput = ref('')
-const createdRoom = ref(null)
 
 // Methods
 const handleLogout = async () => {
   await globalStore.logout()
   router.push('/login')
-}
-
-const handleCreateRoom = async () => {
-  const result = await roomsStore.createRoom()
-
-  if (result.success) {
-    createdRoom.value = result.room
-    showRoomCreatedModal.value = true
-  }
 }
 
 const handleJoinRoom = async (roomIdentifier) => {
