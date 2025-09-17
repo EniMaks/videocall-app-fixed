@@ -161,7 +161,7 @@ def system_info(request):
                 'media_url': settings.MEDIA_URL,
             })
 
-        return JsonResponse(.system_data)
+        return JsonResponse(system_data)
 
     except Exception as e:
         logger.error(f"System info endpoint failed: {e}")
