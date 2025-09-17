@@ -55,7 +55,7 @@
   },
   "dashboard": {
     "createLinkTitle": "लिंक बनाएँ",
-    ""createLinkDesc": "एक नया वीडियो कॉल शुरू करें और लिंक साझा करें"",
+    "createLinkDesc": "एक नया वीडियो कॉल शुरू करें और लिंक साझा करें",
     "joinCallTitle": "कॉल में शामिल हों",
     "joinCallDesc": "शामिल होने के लिए एक कमरा कोड या लिंक दर्ज करें",
     "recentRooms": "हाल के कमरे",
