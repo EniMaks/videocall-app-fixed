@@ -1,7 +1,7 @@
 # apps/core/views.py - Core application views including health check
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils import timezone
 from django.db import connection
 from django.core.cache import cache
@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 
 
 @require_http_methods(["GET"])
-@csrf_exempt
 def health_check(request):
     """
     Health check endpoint for monitoring system status.
@@ -133,7 +132,6 @@ def health_check(request):
 
 
 @require_http_methods(["GET"])
-@csrf_exempt
 def system_info(request):
     """
     System information endpoint for monitoring and debugging.
@@ -163,7 +161,7 @@ def system_info(request):
                 'media_url': settings.MEDIA_URL,
             })
 
-        return JsonResponse(system_data)
+        return JsonResponse(.system_data)
 
     except Exception as e:
         logger.error(f"System info endpoint failed: {e}")
@@ -174,7 +172,6 @@ def system_info(request):
 
 
 @require_http_methods(["GET"])
-@csrf_exempt
 def metrics(request):
     """
     Basic metrics endpoint for monitoring.

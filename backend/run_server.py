@@ -13,6 +13,9 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(BASE_DIR))
 
+# Change working directory
+os.chdir(BASE_DIR)
+
 # Set Django settings module
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'videocall_app.settings')
 
@@ -29,7 +32,7 @@ def check_daphne_installed():
 
 def run_with_daphne():
     """Run server with Daphne (supports WebSocket)"""
-    print("🚀 Starting server with Daphne (WebSocket support enabled)")
+    print("(Rocket) Starting server with Daphne (WebSocket support enabled)")
     print("   Backend: http://localhost:8000")
     print("   WebSocket: ws://localhost:8000/ws/")
     print("   Press Ctrl+C to stop")
@@ -39,7 +42,7 @@ def run_with_daphne():
 
 def run_with_runserver():
     """Run server with standard runserver (no WebSocket support)"""
-    print("⚠️  Running with standard Django runserver")
+    print("(Warning)  Running with standard Django runserver")
     print("   WebSocket connections will NOT work!")
     print("   Install Daphne for WebSocket support: pip install daphne")
     print("   Backend: http://localhost:8000")
@@ -50,13 +53,13 @@ def run_with_runserver():
 
 def main():
     """Main function"""
-    print("🔌 Video Call Application Server")
+    print("Video Call Application Server")
     print("=" * 40)
 
     if check_daphne_installed():
         run_with_daphne()
     else:
-        print("❌ Daphne not found - WebSocket support disabled")
+        print("(Error) Daphne not found - WebSocket support disabled")
         print("   Install it with: pip install daphne")
         print("   Or install from requirements: pip install -r requirements.txt")
         print()

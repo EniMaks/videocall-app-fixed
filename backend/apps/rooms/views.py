@@ -1,6 +1,5 @@
 # rooms/views.py - Room management API views
 from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -31,11 +30,11 @@ def require_auth(view_func):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@csrf_exempt
 @require_auth
 @ratelimit(key='ip', rate='30/min', method='POST', block=True)
 def create_room(request):
     """Create a new video call room"""
+    logger.info("create_room view called")
     try:
         client_ip = get_client_ip(request)
         logger.info(f"Creating room for IP: {client_ip}")
@@ -76,7 +75,6 @@ def create_room(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-@csrf_exempt
 @require_auth
 def get_room(request, room_id):
     """Get room information by room ID"""
@@ -125,7 +123,6 @@ def get_room(request, room_id):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@csrf_exempt
 @require_auth
 @ratelimit(key='ip', rate='60/min', method='POST', block=True)
 def join_room(request):
@@ -183,7 +180,6 @@ def join_room(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-@csrf_exempt
 @require_auth
 def leave_room(request, room_id):
     """Leave a room"""
@@ -241,7 +237,6 @@ def leave_room(request, room_id):
 
 @api_view(['DELETE'])
 @permission_classes([AllowAny])
-@csrf_exempt
 @require_auth
 def delete_room(request, room_id):
     """Delete a room (only creator or admin can delete)"""
@@ -281,7 +276,6 @@ def delete_room(request, room_id):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-@csrf_exempt
 @require_auth
 def health_check(request):
     """API health check endpoint"""
