@@ -15,7 +15,7 @@
     "authFailed": "Authentifizierung fehlgeschlagen",
     "logoutSuccess": "Abmeldung erfolgreich",
     "loggedOut": "Abgemeldet",
-    "roomNotFound": "Raum не найден oder abgelaufen",
+    "roomNotFound": "Raum nicht gefunden oder abgelaufen",
     "failedToConnect": "Verbindung zum Raum fehlgeschlagen. Bitte versuchen Sie es erneut.",
     "failedToJoin": "Beitritt zum Anruf fehlgeschlagen",
     "roomCodeCopied": "Raumcode kopiert!",
