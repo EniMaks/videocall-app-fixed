@@ -69,7 +69,7 @@
     "joinButton": "Войти"
   },
   "videoCall": {
-    "roomTitle": "Комната {{code}}",
+    "roomTitle": "Комната {code}",
     "shareRoom": "Поделиться комнатой",
     "connectionStats": "Статистика соединения",
     "endCall": "Завершить звонок",
@@ -133,10 +133,10 @@
     "copied": "Скопировано!",
     "close": "Закрыть",
     "joinRoom": "Войти в комнату",
-    "expiresIn": "Комната истекает через {{time}}",
+    "expiresIn": "Комната истекает через {time}",
     "lessThanHour": "менее чем через час",
-    "hours": "{{count}} часа | {{count}} часов | {{count}} часов",
-    "days": "{{count}} день | {{count}} дня | {{count}} дней"
+    "hours": "{count} час | {count} часа | {count} часов",
+    "days": "{count} день | {count} дня | {count} дней"
   },
   "notFound": {
     "title": "Страница не найдена",

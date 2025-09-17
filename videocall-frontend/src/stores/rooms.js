@@ -26,11 +26,13 @@ export const useRoomsStore = defineStore('rooms', () => {
 
   // Actions
   const openRoomCreatedModal = (room) => {
+    console.log('Opening room created modal', room);
     createdRoom.value = room
     showRoomCreatedModal.value = true
   }
 
   const closeRoomCreatedModal = () => {
+    console.log('Closing room created modal');
     showRoomCreatedModal.value = false
     createdRoom.value = null
   }
@@ -57,6 +59,8 @@ export const useRoomsStore = defineStore('rooms', () => {
       globalStore.addNotification('notifications.roomCreated', 'success', 3000)
       
       openRoomCreatedModal(newRoom) // Use the action
+
+      console.log('Room created, modal state:', showRoomCreatedModal.value);
 
       return { success: true, room: newRoom }
     } catch (error) {
