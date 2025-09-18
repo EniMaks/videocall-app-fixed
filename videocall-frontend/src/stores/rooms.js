@@ -339,6 +339,8 @@ export const useRoomsStore = defineStore('rooms', () => {
   return {
     // State
     currentRoom,
+    createdRoom,
+    showRoomCreatedModal,
     roomHistory,
     isCreatingRoom,
     isJoiningRoom,
@@ -358,6 +360,8 @@ export const useRoomsStore = defineStore('rooms', () => {
     leaveRoom,
     getRoomInfo,
     deleteRoom,
+    openRoomCreatedModal,
+    closeRoomCreatedModal,
     updateParticipants,
     addParticipant,
     removeParticipant,
