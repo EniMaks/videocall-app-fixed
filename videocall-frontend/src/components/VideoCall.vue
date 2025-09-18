@@ -1,6 +1,6 @@
 <!-- src/components/VideoCall.vue - Complete main video call component -->
 <template>
-  <div class="min-h-screen bg-black flex flex-col">
+  <div class="h-screen bg-black flex flex-col">
     <!-- Header -->
     <header
       class="bg-gray-900 text-white p-4 flex items-center justify-between z-10 safe-area-inset"
