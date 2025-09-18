@@ -32,15 +32,26 @@ class VideoCallConsumer(AsyncWebsocketConsumer):
             session = self.scope.get('session', {})
             self.participant_id = session.get('session_key') or f'temp_{timezone.now().timestamp()}'
 
-            # Join room and get updated participant list
-            room_data, error_message = await self.join_room(self.room_id, self.participant_id)
+            # Verify room exists and user can join
+            room_data = await self.get_room_data(self.room_id)
 
             if not room_data:
-                await self.close(code=4004 if "not found" in error_message else 4003)
+                await self.close(code=4004)  # Room not found
                 return
 
-            # Add user to the Channel group
-            await self.channel_layer.group_add(self.room_group_name, self.channel_name)
+            # Check room capacity
+            participants = room_data.get('participants', [])
+            max_participants = room_data.get('max_participants', 2)
+
+            if len(participants) >= max_participants and self.participant_id not in participants:
+                await self.close(code=4003)  # Room is full
+                return
+
+            # Join the room group
+            await self.channel_layer.group_add(
+                self.room_group_name,
+                self.channel_name
+            )
 
             # Accept the WebSocket connection
             await self.accept()
