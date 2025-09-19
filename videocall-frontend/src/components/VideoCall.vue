@@ -174,10 +174,10 @@
         :class="[
           'absolute z-20 rounded-xl overflow-hidden shadow-2xl transition-all duration-300 cursor-pointer border-2',
           localVideoSize === 'small'
-            ? 'w-32 h-24 bottom-4 right-4'
+            ? 'w-32 h-24 bottom-24 right-4'
             : localVideoSize === 'large'
-              ? 'w-64 h-48 bottom-4 right-4'
-              : 'w-48 h-36 bottom-4 right-4',
+              ? 'w-64 h-48 bottom-24 right-4'
+              : 'w-48 h-36 bottom-24 right-4',
           webrtcStore.isVideoEnabled ? 'border-green-400' : 'border-gray-600',
         ]"
         @click="toggleLocalVideoSize"
@@ -255,113 +255,112 @@
           <span>{{ connectionQualityText }}</span>
         </div>
       </div>
-    </div>
-
-    <!-- Controls -->
-    <div class="bg-gray-900 p-6 safe-area-inset">
-      <div class="max-w-md mx-auto flex items-center justify-center space-x-6">
-        <!-- Toggle Audio -->
-        <button
-          :class="[
-            'control-button',
-            webrtcStore.isAudioEnabled ? 'control-button-active' : 'control-button-danger',
-          ]"
-          :title="webrtcStore.isAudioEnabled ? $t('videoCall.muteMic') : $t('videoCall.unmuteMic')"
-          @click="webrtcStore.toggleAudio"
-        >
-          <svg
-            v-if="webrtcStore.isAudioEnabled"
-            class="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+      <!-- Controls -->
+      <div class="absolute z-30 bottom-0 left-0 right-0 bg-gray-900/70 backdrop-blur-sm pb-4 safe-area-inset">
+        <div class="max-w-md mx-auto flex items-center justify-center space-x-6">
+          <!-- Toggle Audio -->
+          <button
+            :class="[
+              'control-button',
+              webrtcStore.isAudioEnabled ? 'control-button-active' : 'control-button-danger',
+            ]"
+            :title="webrtcStore.isAudioEnabled ? $t('videoCall.muteMic') : $t('videoCall.unmuteMic')"
+            @click="webrtcStore.toggleAudio"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-            ></path>
-          </svg>
-          <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1m0 0V7a3 3 0 013-3h8a3 3 0 013 3v2M4 9h1m11 0h5m-9 0a1 1 0 011-1v-1a1 1 0 011-1m-1 1v1a1 1 0 001 1M9 7h8a3 3 0 013 3v2"
-            ></path>
-          </svg>
-        </button>
+            <svg
+              v-if="webrtcStore.isAudioEnabled"
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+              ></path>
+            </svg>
+            <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1m0 0V7a3 3 0 013-3h8a3 3 0 013 3v2M4 9h1m11 0h5m-9 0a1 1 0 011-1v-1a1 1 0 011-1m-1 1v1a1 1 0 001 1M9 7h8a3 3 0 013 3v2"
+              ></path>
+            </svg>
+          </button>
 
-        <!-- Toggle Video -->
-        <button
-          :class="[
-            'control-button',
-            webrtcStore.isVideoEnabled ? 'control-button-active' : 'control-button-danger',
-          ]"
-          :title="webrtcStore.isVideoEnabled ? $t('videoCall.turnOffCam') : $t('videoCall.turnOnCam')"
-          @click="webrtcStore.toggleVideo"
-        >
-          <svg
-            v-if="webrtcStore.isVideoEnabled"
-            class="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+          <!-- Toggle Video -->
+          <button
+            :class="[
+              'control-button',
+              webrtcStore.isVideoEnabled ? 'control-button-active' : 'control-button-danger',
+            ]"
+            :title="webrtcStore.isVideoEnabled ? $t('videoCall.turnOffCam') : $t('videoCall.turnOnCam')"
+            @click="webrtcStore.toggleVideo"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-            ></path>
-          </svg>
-          <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18 21l-1.5-1.5m-6.364-6.364L8.5 14.5 7 13l1.636-1.636m0 0L9 10.5"
-            ></path>
-          </svg>
-        </button>
+            <svg
+              v-if="webrtcStore.isVideoEnabled"
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+              ></path>
+            </svg>
+            <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18 21l-1.5-1.5m-6.364-6.364L8.5 14.5 7 13l1.636-1.636m0 0L9 10.5"
+              ></path>
+            </svg>
+          </button>
 
-        <!-- Share Room -->
-        <button
-          class="control-button control-button-inactive"
-          :title="$t('videoCall.shareRoom')"
-          @click="shareRoom"
-        >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
-            ></path>
-          </svg>
-        </button>
+          <!-- Share Room -->
+          <button
+            class="control-button control-button-inactive"
+            :title="$t('videoCall.shareRoom')"
+            @click="shareRoom"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
+              ></path>
+            </svg>
+          </button>
 
-        <!-- End Call -->
-        <button
-          class="control-button control-button-danger bg-red-500 hover:bg-red-600"
-          :title="$t('videoCall.endCall')"
-          @click="handleEndCall"
-        >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M16 8l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 3l18 18"
-            ></path>
-          </svg>
-        </button>
-      </div>
+          <!-- End Call -->
+          <button
+            class="control-button control-button-danger bg-red-500 hover:bg-red-600"
+            :title="$t('videoCall.endCall')"
+            @click="handleEndCall"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M16 8l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 3l18 18"
+              ></path>
+            </svg>
+          </button>
+        </div>
 
-      <!-- Connection status message -->
-      <div v-if="connectionMessage" class="mt-4 text-center text-sm text-gray-400">
-        {{ connectionMessage }}
+        <!-- Connection status message -->
+        <div v-if="connectionMessage" class="mt-4 text-center text-sm text-gray-400">
+          {{ connectionMessage }}
+        </div>
       </div>
     </div>
 
@@ -540,6 +539,7 @@ export default {
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useWebRTCStore } from '../stores/webrtc'
 import { useRoomsStore } from '../stores/rooms'
 import { useGlobalStore } from '../stores/global'
@@ -548,6 +548,7 @@ import { webrtcService } from '../services/webrtc'
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 const webrtcStore = useWebRTCStore()
 const roomsStore = useRoomsStore()
 const globalStore = useGlobalStore()
@@ -570,8 +571,8 @@ const shouldMirrorLocal = ref(true)
 const showVideoInfo = ref(false)
 const showConnectionQuality = ref(true)
 const isConnecting = ref(false)
-const connectingMessage = ref('Connecting...')
-const connectingSubMessage = ref('Setting up your video call')
+const connectingMessage = ref(t('loading.connectingToRoom'))
+const connectingSubMessage = ref(t('loading.preparingCall'))
 
 // Connection monitoring
 const connectionStats = ref(null)
@@ -581,19 +582,19 @@ const statsMonitor = ref(null)
 const connectionStatusText = computed(() => {
   switch (webrtcStore.connectionState) {
     case 'new':
-      return 'Initializing...'
+      return t('videoCall.status.initializing')
     case 'connecting':
-      return 'Connecting...'
+      return t('videoCall.status.connecting')
     case 'connected':
-      return 'Connected'
+      return t('videoCall.status.connected')
     case 'disconnected':
-      return 'Disconnected'
+      return t('videoCall.status.disconnected')
     case 'failed':
-      return 'Connection failed'
+      return t('videoCall.status.failed')
     case 'closed':
-      return 'Connection closed'
+      return t('videoCall.status.closed')
     default:
-      return 'Unknown'
+      return t('videoCall.status.unknown')
   }
 })
 
@@ -630,20 +631,20 @@ const qrCodeUrl = computed(() => {
 
 const waitingMessage = computed(() => {
   const messages = [
-    'Waiting for others to join...',
-    'Room is ready for participants',
-    'Share the code to get started',
+    t('videoCall.waitingMessage1'),
+    t('videoCall.waitingMessage2'),
+    t('videoCall.waitingMessage3'),
   ]
   return messages[Math.floor(Date.now() / 5000) % messages.length]
 })
 
 const connectionMessage = computed(() => {
   if (webrtcStore.connectionState === 'connecting') {
-    return 'Establishing secure connection...'
+    return t('videoCall.connectionMessage.connecting')
   } else if (webrtcStore.connectionState === 'failed') {
-    return 'Connection failed. Please check your internet connection.'
+    return t('videoCall.connectionMessage.failed')
   } else if (webrtcStore.connectionState === 'disconnected') {
-    return 'Disconnected. Attempting to reconnect...'
+    return t('videoCall.connectionMessage.disconnected')
   }
   return ''
 })
@@ -656,10 +657,10 @@ const connectionQuality = computed(() => {
 
 const connectionQualityText = computed(() => {
   const quality = connectionQuality.value
-  if (quality >= 80) return 'Excellent'
-  if (quality >= 60) return 'Good'
-  if (quality >= 40) return 'Fair'
-  return 'Poor'
+  if (quality >= 80) return t('videoCall.qualityLevel.excellent')
+  if (quality >= 60) return t('videoCall.qualityLevel.good')
+  if (quality >= 40) return t('videoCall.qualityLevel.fair')
+  return t('videoCall.qualityLevel.poor')
 })
 
 const videoResolution = computed(() => {
@@ -667,7 +668,7 @@ const videoResolution = computed(() => {
     const { frameWidth, frameHeight } = connectionStats.value.video.inbound
     return `${frameWidth || 0}×${frameHeight || 0}`
   }
-  return 'N/A'
+  return t('videoCall.videoResolutionNA')
 })
 
 const videoFrameRate = computed(() => {
@@ -722,28 +723,28 @@ const initializeCall = async () => {
 
   try {
     isConnecting.value = true
-    connectingMessage.value = 'Finding room...'
+    connectingMessage.value = t('loading.findingRoom')
 
     // Get room info
     const roomResult = await roomsStore.getRoomInfo(roomId)
     if (!roomResult.success) {
-      globalStore.addNotification('Room not found or expired', 'error')
+      globalStore.addNotification(t('notifications.roomNotFound'), 'error')
       router.push('/')
       return
     }
 
     roomInfo.value = roomResult.room
-    connectingMessage.value = 'Accessing camera and microphone...'
-    connectingSubMessage.value = 'Please allow permissions when prompted'
+    connectingMessage.value = t('loading.accessingMedia')
+    connectingSubMessage.value = t('loading.promptPermissions')
 
     // Initialize media
     const mediaResult = await webrtcStore.initializeLocalMedia()
     if (!mediaResult.success) {
-      globalStore.addNotification('Failed to access camera/microphone', 'error')
+      globalStore.addNotification(t('webrtc.mediaAccessFailed'), 'error')
     }
 
-    connectingMessage.value = 'Setting up connection...'
-    connectingSubMessage.value = 'Preparing for video call'
+    connectingMessage.value = t('loading.settingUpConnection')
+    connectingSubMessage.value = t('loading.preparingCall')
 
     // Create peer connection
     const peerResult = webrtcStore.createPeerConnection()
@@ -751,15 +752,15 @@ const initializeCall = async () => {
       throw new Error('Failed to create peer connection')
     }
 
-    connectingMessage.value = 'Connecting to room...'
-    connectingSubMessage.value = 'Almost ready'
+    connectingMessage.value = t('loading.connectingToRoom')
+    connectingSubMessage.value = t('loading.almostReady')
 
     // Connect WebSocket with timeout
     try {
       await webrtcStore.connectWebSocket(roomId)
     } catch (error) {
       console.error('WebSocket connection failed:', error)
-      globalStore.addNotification('Failed to connect to room. Please try again.', 'error')
+      globalStore.addNotification(t('notifications.failedToConnect'), 'error')
       isConnecting.value = false
       return
     }
@@ -771,7 +772,7 @@ const initializeCall = async () => {
     isConnecting.value = false
   } catch (error) {
     console.error('Failed to initialize call:', error)
-    globalStore.addNotification('Failed to join call', 'error')
+    globalStore.addNotification(t('notifications.failedToJoin'), 'error')
     isConnecting.value = false
     router.push('/')
   }
@@ -781,7 +782,7 @@ const handleEndCall = async () => {
   try {
     // Show confirmation if call is active
     if (webrtcStore.isConnected) {
-      const confirmed = confirm('Are you sure you want to end this call?')
+      const confirmed = confirm(t('videoCall.confirmEndCall'))
       if (!confirmed) return
     }
 
@@ -834,7 +835,7 @@ const copyRoomCode = async () => {
     const result = await utils.copyToClipboard(roomInfo.value.short_code)
     if (result.success) {
       roomCodeCopied.value = true
-      globalStore.addNotification('Room code copied!', 'success', 2000)
+      globalStore.addNotification(t('notifications.roomCodeCopied'), 'success', 2000)
       setTimeout(() => {
         roomCodeCopied.value = false
       }, 2000)
@@ -846,7 +847,7 @@ const copyRoomLink = async () => {
   const result = await utils.copyToClipboard(roomLink.value)
   if (result.success) {
     roomLinkCopied.value = true
-    globalStore.addNotification('Room link copied!', 'success', 2000)
+    globalStore.addNotification(t('notifications.roomLinkCopied'), 'success', 2000)
     setTimeout(() => {
       roomLinkCopied.value = false
     }, 2000)

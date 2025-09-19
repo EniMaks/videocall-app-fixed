@@ -121,7 +121,8 @@
       "connecting": "Establishing secure connection...",
       "failed": "Connection failed. Please check your internet connection.",
       "disconnected": "Disconnected. Attempting to reconnect..."
-    }
+    },
+    "videoResolutionNA": "N/A"
   },
   "roomCreatedModal": {
     "title": "Room Created!",

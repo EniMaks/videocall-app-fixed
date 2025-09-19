@@ -120,7 +120,8 @@
       "connecting": "Estableciendo conexión segura...",
       "failed": "Error de conexión. Por favor, verifique su conexión a Internet.",
       "disconnected": "Desconectado. Intentando reconectar..."
-    }
+    },
+    "videoResolutionNA": "N/A"
   },
   "roomCreatedModal": {
     "title": "¡Sala creada!",

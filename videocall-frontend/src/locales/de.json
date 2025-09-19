@@ -120,7 +120,8 @@
       "connecting": "Sichere Verbindung wird hergestellt...",
       "failed": "Verbindung fehlgeschlagen. Bitte überprüfen Sie Ihre Internetverbindung.",
       "disconnected": "Getrennt. Es wird versucht, die Verbindung wiederherzustellen..."
-    }
+    },
+    "videoResolutionNA": "N/A"
   },
   "roomCreatedModal": {
     "title": "Raum erstellt!",
