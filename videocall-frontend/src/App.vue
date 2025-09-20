@@ -1,7 +1,7 @@
 // src/App.vue - Main application component
 <template>
   <div id="app" class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-    <header class="absolute top-0 right-0 p-4 z-20">
+    <header class="absolute top-0 left-0 p-4 z-20">
       <LanguageSwitcher />
     </header>
     <router-view />
