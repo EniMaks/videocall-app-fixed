@@ -6,7 +6,7 @@
         This is a real-time video calling application built with Vue.js and Django.
       </p>
 
-      <div class="mt-10 prose prose-lg text-gray-600 dark:text-gray-300 mx-auto">
+      <div class="mt-10 prose prose-lg dark:prose-invert text-gray-600 dark:text-gray-300 mx-auto">
         <h2>Features</h2>
         <ul>
           <li>Real-time video and audio communication</li>

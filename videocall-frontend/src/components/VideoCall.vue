@@ -174,10 +174,10 @@
         :class="[
           'absolute z-20 rounded-xl overflow-hidden shadow-2xl transition-all duration-300 cursor-pointer border-2',
           localVideoSize === 'small'
-            ? 'w-32 h-24 bottom-24 right-4'
+            ? 'w-32 h-24 bottom-36 right-4'
             : localVideoSize === 'large'
-              ? 'w-64 h-48 bottom-24 right-4'
-              : 'w-48 h-36 bottom-24 right-4',
+              ? 'w-64 h-48 bottom-36 right-4'
+              : 'w-48 h-36 bottom-36 right-4',
           webrtcStore.isVideoEnabled ? 'border-green-400' : 'border-gray-600',
         ]"
         @click="toggleLocalVideoSize"
@@ -255,112 +255,113 @@
           <span>{{ connectionQualityText }}</span>
         </div>
       </div>
-      <!-- Controls -->
-      <div class="absolute z-30 bottom-0 left-0 right-0 bg-gray-900/70 backdrop-blur-sm pb-4 safe-area-inset">
-        <div class="max-w-md mx-auto flex items-center justify-center space-x-6">
-          <!-- Toggle Audio -->
-          <button
-            :class="[
-              'control-button',
-              webrtcStore.isAudioEnabled ? 'control-button-active' : 'control-button-danger',
-            ]"
-            :title="webrtcStore.isAudioEnabled ? $t('videoCall.muteMic') : $t('videoCall.unmuteMic')"
-            @click="webrtcStore.toggleAudio"
-          >
-            <svg
-              v-if="webrtcStore.isAudioEnabled"
-              class="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-              ></path>
-            </svg>
-            <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1m0 0V7a3 3 0 013-3h8a3 3 0 013 3v2M4 9h1m11 0h5m-9 0a1 1 0 011-1v-1a1 1 0 011-1m-1 1v1a1 1 0 001 1M9 7h8a3 3 0 013 3v2"
-              ></path>
-            </svg>
-          </button>
+    </div>
 
-          <!-- Toggle Video -->
-          <button
-            :class="[
-              'control-button',
-              webrtcStore.isVideoEnabled ? 'control-button-active' : 'control-button-danger',
-            ]"
-            :title="webrtcStore.isVideoEnabled ? $t('videoCall.turnOffCam') : $t('videoCall.turnOnCam')"
-            @click="webrtcStore.toggleVideo"
+    <!-- Controls -->
+    <div class="bg-gray-900/70 backdrop-blur-sm py-4 safe-area-inset">
+      <div class="max-w-md mx-auto flex items-center justify-center space-x-6">
+        <!-- Toggle Audio -->
+        <button
+          :class="[
+            'control-button',
+            webrtcStore.isAudioEnabled ? 'control-button-active' : 'control-button-danger',
+          ]"
+          :title="webrtcStore.isAudioEnabled ? $t('videoCall.muteMic') : $t('videoCall.unmuteMic')"
+          @click="webrtcStore.toggleAudio"
+        >
+          <svg
+            v-if="webrtcStore.isAudioEnabled"
+            class="w-8 h-8"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            <svg
-              v-if="webrtcStore.isVideoEnabled"
-              class="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-              ></path>
-            </svg>
-            <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18 21l-1.5-1.5m-6.364-6.364L8.5 14.5 7 13l1.636-1.636m0 0L9 10.5"
-              ></path>
-            </svg>
-          </button>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+            ></path>
+          </svg>
+          <svg v-else class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1m0 0V7a3 3 0 013-3h8a3 3 0 013 3v2M4 9h1m11 0h5m-9 0a1 1 0 011-1v-1a1 1 0 011-1m-1 1v1a1 1 0 001 1M9 7h8a3 3 0 013 3v2"
+            ></path>
+          </svg>
+        </button>
 
-          <!-- Share Room -->
-          <button
-            class="control-button control-button-inactive"
-            :title="$t('videoCall.shareRoom')"
-            @click="shareRoom"
+        <!-- Toggle Video -->
+        <button
+          :class="[
+            'control-button',
+            webrtcStore.isVideoEnabled ? 'control-button-active' : 'control-button-danger',
+          ]"
+          :title="webrtcStore.isVideoEnabled ? $t('videoCall.turnOffCam') : $t('videoCall.turnOnCam')"
+          @click="webrtcStore.toggleVideo"
+        >
+          <svg
+            v-if="webrtcStore.isVideoEnabled"
+            class="w-8 h-8"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
-              ></path>
-            </svg>
-          </button>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+            ></path>
+          </svg>
+          <svg v-else class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18 21l-1.5-1.5m-6.364-6.364L8.5 14.5 7 13l1.636-1.636m0 0L9 10.5"
+            ></path>
+          </svg>
+        </button>
 
-          <!-- End Call -->
-          <button
-            class="control-button control-button-danger bg-red-500 hover:bg-red-600"
-            :title="$t('videoCall.endCall')"
-            @click="handleEndCall"
-          >
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M16 8l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 3l18 18"
-              ></path>
-            </svg>
-          </button>
-        </div>
+        <!-- Share Room -->
+        <button
+          class="control-button control-button-inactive"
+          :title="$t('videoCall.shareRoom')"
+          @click="shareRoom"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
+            ></path>
+          </svg>
+        </button>
 
-        <!-- Connection status message -->
-        <div v-if="connectionMessage" class="mt-4 text-center text-sm text-gray-400">
-          {{ connectionMessage }}
-        </div>
+        <!-- End Call -->
+        <button
+          class="control-button control-button-danger bg-red-500 hover:bg-red-600"
+          :title="$t('videoCall.endCall')"
+          @click="handleEndCall"
+        >
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M16 8l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 3l18 18"
+            ></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Connection status message -->
+      <div v-if="connectionMessage" class="mt-4 text-center text-sm text-gray-400">
+        {{ connectionMessage }}
       </div>
     </div>
 
@@ -957,7 +958,7 @@ onUnmounted(async () => {
 }
 
 .control-button {
-  @apply p-4 rounded-full shadow-lg transition-all duration-200 hover:scale-105 active:scale-95;
+  @apply p-5 rounded-full shadow-lg transition-all duration-200 hover:scale-105 active:scale-95;
 }
 
 .control-button-active {
@@ -996,11 +997,11 @@ onUnmounted(async () => {
 /* Responsive design */
 @media (max-width: 768px) {
   .control-button {
-    @apply p-3;
+    @apply p-4;
   }
 
   .control-button svg {
-    @apply w-5 h-5;
+    @apply w-6 h-6;
   }
 }
 
