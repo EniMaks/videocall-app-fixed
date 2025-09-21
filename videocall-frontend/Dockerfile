@@ -2,11 +2,11 @@ FROM node:20-alpine AS builder
 
 # Аргументы сборки, которые мы передадим из docker-compose.yml
 ARG VITE_API_BASE_URL
-ARG VITE_WS_HOST
+ARG VITE_WS_BASE_URL
 
 # Установка переменных окружения для процесса сборки
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
-ENV VITE_WS_HOST=$VITE_WS_HOST
+ENV VITE_WS_BASE_URL=$VITE_WS_BASE_URL
 
 WORKDIR /app
 
