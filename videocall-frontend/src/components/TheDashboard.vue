@@ -1,7 +1,7 @@
 // src/components/Dashboard.vue - Main dashboard component
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
-    <!-- Header -->
+    <!-- Header
     <header
       class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700"
     >
@@ -35,7 +35,7 @@
         </button>
       </div>
     </header>
-
+ -->
     <!-- Main Content -->
     <main class="max-w-4xl mx-auto px-4 py-8">
       <!-- Video Preview -->
