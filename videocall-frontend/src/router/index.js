@@ -138,6 +138,18 @@ const routes = [
   //     icon: 'question',
   //   },
   // },
+  {
+    path: '/about',
+    name: 'About',
+    component: () => import('../views/AboutView.vue'),
+    meta: {
+      requiresAuth: false,
+      title: 'About Us',
+      description: 'Information about the application.',
+      showInNav: true,
+      icon: 'info',
+    },
+  },
   // Catch-all route for 404
   {
     path: '/:pathMatch(.*)*',
