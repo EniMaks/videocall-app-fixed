@@ -1,6 +1,7 @@
 <!-- src/components/VideoCall.vue - Complete main video call component -->
+<!-- src/components/VideoCall.vue - Complete main video call component -->
 <template>
-  <div class="h-screen bg-black flex flex-col">
+  <div ref="callContainer" class="h-screen bg-black flex flex-col">
     <!-- Header -->
     <header
       class="bg-gray-900 text-white p-4 flex items-center justify-between z-10 safe-area-inset"
@@ -555,6 +556,7 @@ const roomsStore = useRoomsStore()
 const globalStore = useGlobalStore()
 
 // Template refs
+const callContainer = ref(null)
 const localVideoRef = ref(null)
 const remoteVideoRef = ref(null)
 
@@ -719,6 +721,12 @@ const remoteVideoInfo = computed(() => {
 })
 
 // Methods
+const setContainerHeight = () => {
+  if (callContainer.value) {
+    callContainer.value.style.height = `${window.innerHeight}px`;
+  }
+};
+
 const initializeCall = async () => {
   const roomId = route.params.roomId
 
@@ -928,9 +936,14 @@ onMounted(() => {
   console.log('VideoCall component mounted');
   initializeCall()
   durationInterval = setInterval(updateCallDuration, 1000)
+
+  setContainerHeight();
+  window.addEventListener('resize', setContainerHeight);
 })
 
 onUnmounted(async () => {
+  window.removeEventListener('resize', setContainerHeight);
+
   // Cleanup intervals
   if (durationInterval) {
     clearInterval(durationInterval)
