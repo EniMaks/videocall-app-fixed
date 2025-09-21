@@ -136,6 +136,9 @@ services:
     build:
       context: ./videocall-frontend
       dockerfile: Dockerfile
+      args:
+        - VITE_API_BASE_URL=${VITE_API_BASE_URL}
+        - VITE_WS_HOST=${VITE_WS_HOST}
     networks:
       - app-network
     restart: unless-stopped
