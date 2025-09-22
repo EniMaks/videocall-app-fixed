@@ -723,7 +723,7 @@ const remoteVideoInfo = computed(() => {
 // Methods
 const setContainerHeight = () => {
   if (callContainer.value) {
-    callContainer.value.style.height = `${window.innerHeight}px`;
+    callContainer.value.style.height = `${window.innerHeight*0.8}px`;
   }
 };
 
