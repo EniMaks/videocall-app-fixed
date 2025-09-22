@@ -259,7 +259,7 @@
     </div>
 
     <!-- Controls -->
-    <div class="py-4 safe-area-inset">
+    <div class="bg-gradient-to-br from-gray-800 to-gray-900 py-4 safe-area-inset">
       <div class="max-w-md mx-auto flex items-center justify-center space-x-6">
         <!-- Toggle Audio -->
         <button
