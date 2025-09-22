@@ -125,7 +125,7 @@
       <!-- No remote video placeholder -->
       <div
         v-else
-        class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900"
+        class="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-gray-800 to-gray-900"
       >
         <div class="text-center text-white max-w-md mx-auto p-8">
           <div
@@ -259,7 +259,7 @@
     </div>
 
     <!-- Controls -->
-    <div class="bg-gradient-to-br from-gray-800 to-gray-900 py-4 safe-area-inset">
+    <div class="bg-gradient-to-t from-gray-750 to-gray-800 py-4 safe-area-inset">
       <div class="max-w-md mx-auto flex items-center justify-center space-x-6">
         <!-- Toggle Audio -->
         <button
