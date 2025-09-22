@@ -9,7 +9,7 @@
         muted
         playsinline
         class="w-full h-full object-cover"
-        :class="{ mirror: shouldMirror }"
+        :class="{ mirror: webrtcStore.shouldMirror }"
       ></video>
 
       <!-- Overlay controls (show on hover) -->
@@ -25,7 +25,7 @@
             ]"
             :title="webrtcStore.isVideoEnabled ? 'Turn off camera' : 'Turn on camera'"
             :disabled="!webrtcStore.localStream"
-            @click="toggleVideo"
+            @click="webrtcStore.toggleVideo"
           >
             <svg
               v-if="webrtcStore.isVideoEnabled"
@@ -59,7 +59,7 @@
             ]"
             :title="webrtcStore.isAudioEnabled ? 'Mute microphone' : 'Unmute microphone'"
             :disabled="!webrtcStore.localStream"
-            @click="toggleAudio"
+            @click="webrtcStore.toggleAudio"
           >
             <svg
               v-if="webrtcStore.isAudioEnabled"
@@ -236,323 +236,67 @@
     </div>
 
     <!-- Settings Panel -->
-    <div v-if="showSettings" class="mt-4 card p-4 animate-slide-up">
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Video Settings</h3>
-
-      <!-- Video Devices -->
-      <div v-if="videoDevices.length > 0" class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >Camera</label
-        >
-        <select v-model="selectedVideoDevice" class="input-field" @change="switchVideoDevice">
-          <option v-for="device in videoDevices" :key="device.deviceId" :value="device.deviceId">
-            {{ device.label || `Camera ${videoDevices.indexOf(device) + 1}` }}
-          </option>
-        </select>
-      </div>
-
-      <!-- Audio Devices -->
-      <div v-if="audioDevices.length > 0" class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >Microphone</label
-        >
-        <select v-model="selectedAudioDevice" class="input-field" @change="switchAudioDevice">
-          <option v-for="device in audioDevices" :key="device.deviceId" :value="device.deviceId">
-            {{ device.label || `Microphone ${audioDevices.indexOf(device) + 1}` }}
-          </option>
-        </select>
-      </div>
-
-      <!-- Video Quality Settings -->
-      <div class="mb-4">
-        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >Video Quality</label
-        >
-        <select v-model="selectedQuality" class="input-field" @change="changeVideoQuality">
-          <option value="720p">HD (720p)</option>
-          <option value="480p">SD (480p)</option>
-          <option value="360p">Low (360p)</option>
-        </select>
-      </div>
-
-      <!-- Mirror Video -->
-      <div class="flex items-center justify-between">
-        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Mirror video</label>
-        <button
-          :class="[
-            'relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2',
-            shouldMirror ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-600',
-          ]"
-          @click="shouldMirror = !shouldMirror"
-        >
-          <span
-            :class="[
-              'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-              shouldMirror ? 'translate-x-6' : 'translate-x-1',
-            ]"
-          ></span>
-        </button>
-      </div>
-
-      <!-- Close Settings -->
-      <div class="mt-4 flex justify-end">
-        <button class="btn-secondary px-4 py-2" @click="showSettings = false">Done</button>
-      </div>
-    </div>
+    <SettingsPanel v-if="showSettings" class="mt-4" @close="showSettings = false" />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
-import { useWebRTCStore } from '../stores/webrtc'
-import { useMediaDevices } from '../composables/useMediaDevices'
-import { mediaService } from '../services/media'
+import { ref, onMounted, onUnmounted, watch } from 'vue';
+import { useWebRTCStore } from '../stores/webrtc';
+import { mediaService } from '../services/media';
+import SettingsPanel from './SettingsPanel.vue';
 
-const webrtcStore = useWebRTCStore()
-const {
-  videoDevices,
-  audioDevices,
-  selectedVideoDevice,
-  selectedAudioDevice,
-} = useMediaDevices()
+const webrtcStore = useWebRTCStore();
 
-// Template refs
-const videoRef = ref(null)
+const videoRef = ref(null);
+const mediaError = ref('');
+const isInitializing = ref(false);
+const loadingMessage = ref('');
+const showPermissionHelp = ref(false);
+const showSettings = ref(false);
 
-// Reactive state
-const mediaError = ref('')
-const isInitializing = ref(false)
-const loadingMessage = ref('')
-const showPermissionHelp = ref(false)
-const showSettings = ref(false)
-const showQualityIndicator = ref(false)
-const shouldMirror = ref(true)
-const selectedQuality = ref('720p')
-const videoQuality = ref('high')
-
-// Computed
-const videoQualityText = computed(() => {
-  switch (videoQuality.value) {
-    case 'high':
-      return 'HD'
-    case 'medium':
-      return 'SD'
-    case 'low':
-      return 'Low'
-    default:
-      return 'Unknown'
-  }
-})
-
-// Quality presets
-const qualityPresets = {
-  '720p': { width: 1280, height: 720 },
-  '480p': { width: 640, height: 480 },
-  '360p': { width: 480, height: 360 },
-}
-
-// Methods
 const initializeMedia = async () => {
   try {
-    isInitializing.value = true
-    mediaError.value = ''
-    loadingMessage.value = 'Accessing camera and microphone...'
-
-    const result = await webrtcStore.initializeLocalMedia()
-
+    isInitializing.value = true;
+    mediaError.value = '';
+    loadingMessage.value = 'Accessing camera and microphone...';
+    const result = await webrtcStore.initializeLocalMedia();
     if (!result.success) {
-      mediaError.value = result.error
-      showQualityIndicator.value = false
-    } else {
-      showQualityIndicator.value = true
-      detectVideoQuality()
+      mediaError.value = result.error;
     }
   } catch (error) {
-    console.error('Failed to initialize media:', error)
-    mediaError.value = 'Failed to access camera or microphone'
+    mediaError.value = 'Failed to access camera or microphone';
   } finally {
-    isInitializing.value = false
+    isInitializing.value = false;
   }
-}
-
-const toggleVideo = () => {
-  webrtcStore.toggleVideo()
-  if (webrtcStore.isVideoEnabled) {
-    detectVideoQuality()
-  }
-}
-
-const toggleAudio = () => {
-  webrtcStore.toggleAudio()
-}
-
-const switchVideoDevice = async () => {
-  try {
-    if (selectedVideoDevice.value) {
-      loadingMessage.value = 'Switching camera...'
-      isInitializing.value = true
-
-      // Stop current stream
-      if (webrtcStore.localStream) {
-        webrtcStore.localStream.getVideoTracks().forEach((track) => track.stop())
-      }
-
-      // Create new stream with selected device
-      const constraints = {
-        video: {
-          deviceId: selectedVideoDevice.value,
-          ...qualityPresets[selectedQuality.value],
-        },
-        audio: selectedAudioDevice.value
-          ? {
-              deviceId: selectedAudioDevice.value,
-            }
-          : true,
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia(constraints)
-      webrtcStore.localStream = stream
-
-      detectVideoQuality()
-    }
-  } catch (error) {
-    console.error('Failed to switch video device:', error)
-    mediaError.value = 'Failed to switch camera'
-  } finally {
-    isInitializing.value = false
-  }
-}
-
-const switchAudioDevice = async () => {
-  try {
-    if (selectedAudioDevice.value) {
-      loadingMessage.value = 'Switching microphone...'
-      isInitializing.value = true
-
-      // Similar logic for audio device switching
-      if (webrtcStore.localStream) {
-        webrtcStore.localStream.getAudioTracks().forEach((track) => track.stop())
-      }
-
-      const constraints = {
-        video: selectedVideoDevice.value
-          ? {
-              deviceId: selectedVideoDevice.value,
-              ...qualityPresets[selectedQuality.value],
-            }
-          : true,
-        audio: {
-          deviceId: selectedAudioDevice.value,
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-      }
-
-      const stream = await navigator.mediaDevices.getUserMedia(constraints)
-      webrtcStore.localStream = stream
-    }
-  } catch (error) {
-    console.error('Failed to switch audio device:', error)
-    mediaError.value = 'Failed to switch microphone'
-  } finally {
-    isInitializing.value = false
-  }
-}
-
-const changeVideoQuality = async () => {
-  try {
-    if (webrtcStore.localStream && selectedQuality.value) {
-      loadingMessage.value = 'Changing video quality...'
-      isInitializing.value = true
-
-      const videoTrack = webrtcStore.localStream.getVideoTracks()[0]
-      if (videoTrack) {
-        const constraints = qualityPresets[selectedQuality.value]
-        await videoTrack.applyConstraints(constraints)
-        detectVideoQuality()
-      }
-    }
-  } catch (error) {
-    console.error('Failed to change video quality:', error)
-    mediaError.value = 'Failed to change video quality'
-  } finally {
-    isInitializing.value = false
-  }
-}
-
-const detectVideoQuality = () => {
-  if (!webrtcStore.localStream) return
-
-  const videoTrack = webrtcStore.localStream.getVideoTracks()[0]
-  if (videoTrack) {
-    const settings = videoTrack.getSettings()
-    const width = settings.width || 0
-
-    if (width >= 1280) {
-      videoQuality.value = 'high'
-    } else if (width >= 640) {
-      videoQuality.value = 'medium'
-    } else {
-      videoQuality.value = 'low'
-    }
-  }
-}
-
-const handlePermissionDenied = () => {
-  mediaError.value =
-    'Camera and microphone access denied. Please allow permissions in your browser settings and refresh the page.'
-  showPermissionHelp.value = true
-}
+};
 
 const checkMediaPermissions = async () => {
   try {
-    const permissions = await mediaService.checkMediaPermissions()
+    const permissions = await mediaService.checkMediaPermissions();
     if (permissions.camera === 'denied' || permissions.microphone === 'denied') {
-      handlePermissionDenied()
+      mediaError.value = 'Camera and microphone access denied. Please allow permissions in your browser settings and refresh the page.';
+      showPermissionHelp.value = true;
     }
   } catch (error) {
-    console.warn('Could not check media permissions:', error)
+    console.warn('Could not check media permissions:', error);
   }
-}
+};
 
-// Watch for local stream changes
-watch(
-  () => webrtcStore.localStream,
-  (newStream) => {
-    if (videoRef.value && newStream) {
-      videoRef.value.srcObject = newStream
-    }
-  },
-  { immediate: true },
-)
+watch(() => webrtcStore.localStream, (newStream) => {
+  if (videoRef.value && newStream) {
+    videoRef.value.srcObject = newStream;
+  }
+}, { immediate: true });
 
-// Watch for video enabled changes
-watch(
-  () => webrtcStore.isVideoEnabled,
-  (enabled) => {
-    if (enabled) {
-      detectVideoQuality()
-    }
-  },
-)
-
-// Lifecycle
 onMounted(async () => {
-  await initializeMedia()
-  await checkMediaPermissions()
-
-  // Show quality indicator after 2 seconds
-  setTimeout(() => {
-    if (webrtcStore.hasLocalVideo) {
-      showQualityIndicator.value = true
-    }
-  }, 2000)
-})
+  await initializeMedia();
+  await checkMediaPermissions();
+});
 
 onUnmounted(() => {
   // Cleanup is handled by the WebRTC store
-})
+});
 </script>
 
 <style scoped>
