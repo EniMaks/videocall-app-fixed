@@ -1,7 +1,6 @@
 # apps/authentication/middleware.py
 import logging
 from urllib.parse import parse_qs
-from django.contrib.auth.models import AnonymousUser
 from channels.db import database_sync_to_async
 from rest_framework_simplejwt.tokens import AccessToken, TokenError
 
@@ -21,6 +20,7 @@ class GuestJwtAuthMiddleware:
         guest_token = params.get('guest_token', [None])[0]
 
         if guest_token:
+            from django.contrib.auth.models import AnonymousUser
             try:
                 token = AccessToken(guest_token)
                 payload = token.payload
