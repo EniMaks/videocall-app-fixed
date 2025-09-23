@@ -137,7 +137,13 @@
     "expiresIn": "Комната истекает через {time}",
     "lessThanHour": "менее чем через час",
     "hours": "{count} час | {count} часа | {count} часов",
-    "days": "{count} день | {count} дня | {count} дней"
+    "days": "{count} день | {count} дня | {count} дней",
+    "forRegularUsers": "Для обычных пользователей",
+    "forGuests": "Для гостей",
+    "generatingLink": "Генерация гостевой ссылки...",
+    "guestLink": "Гостевая ссылка",
+    "guestQrCode": "QR-код для гостя",
+    "generationFailed": "Не удалось создать гостевую ссылку. Пожалуйста, попробуйте снова."
   },
   "notFound": {
     "title": "Страница не найдена",

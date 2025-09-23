@@ -166,6 +166,11 @@ export const apiService = {
     return apiClient.delete(`/rooms/${roomId}/delete/`)
   },
 
+  async generateGuestLink(roomId) {
+    await initializeCSRF()
+    return apiClient.post(`/rooms/${roomId}/generate-guest-link/`)
+  },
+
   // System endpoints
   async healthCheck() {
     return apiClient.get('/health/')

@@ -10,5 +10,6 @@ urlpatterns = [
     path('<str:room_id>/', views.get_room, name='get'),
     path('<str:room_id>/leave/', views.leave_room, name='leave'),
     path('<str:room_id>/delete/', views.delete_room, name='delete'),
+    path('<str:room_id>/generate-guest-link/', views.generate_guest_link, name='generate_guest_link'),
 ]
 

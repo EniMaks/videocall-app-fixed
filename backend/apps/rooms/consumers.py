@@ -28,9 +28,25 @@ class VideoCallConsumer(AsyncWebsocketConsumer):
             self.room_id = self.scope['url_route']['kwargs']['room_id']
             self.room_group_name = f'room_{self.room_id}'
 
-            # Get participant ID from session or generate one
-            session = self.scope.get('session', {})
-            self.participant_id = session.get('session_key') or f'temp_{timezone.now().timestamp()}'
+            # Check for guest access
+            is_guest = self.scope.get('is_guest', False)
+            if is_guest:
+                # For guests, the room_id from the token must match the URL
+                token_room_id = self.scope.get('room_id')
+                if token_room_id != self.room_id:
+                    logger.warning(f"Guest token room_id ({token_room_id}) does not match URL room_id ({self.room_id}).")
+                    await self.close(code=4001) # Unauthorized
+                    return
+                self.participant_id = f'guest_{timezone.now().timestamp()}'
+            else:
+                # This is a regular user, check if they are authenticated via session
+                session = self.scope.get('session', {})
+                if not session.get('authenticated'):
+                     logger.warning(f"Unauthenticated user without guest token tried to connect to room {self.room_id}.")
+                     await self.close(code=4001) # Unauthorized
+                     return
+                self.participant_id = session.get('session_key') or f'temp_{timezone.now().timestamp()}'
+
 
             # Verify room exists and user can join
             room_data = await self.get_room_data(self.room_id)

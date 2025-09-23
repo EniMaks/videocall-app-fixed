@@ -137,7 +137,13 @@
     "expiresIn": "Room expires in {{time}}",
     "lessThanHour": "less than 1 hour",
     "hours": "{{count}} hours",
-    "days": "{{count}} days"
+    "days": "{{count}} days",
+    "forRegularUsers": "For Regular Users",
+    "forGuests": "For Guests",
+    "generatingLink": "Generating guest link...",
+    "guestLink": "Guest Link",
+    "guestQrCode": "Guest QR Code",
+    "generationFailed": "Failed to generate guest link. Please try again."
   },
   "notFound": {
     "title": "Page Not Found",

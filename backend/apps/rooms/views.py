@@ -11,6 +11,7 @@ import qrcode
 import io
 import base64
 import logging
+from rest_framework_simplejwt.tokens import AccessToken
 
 logger = logging.getLogger(__name__)
 
@@ -270,6 +271,51 @@ def delete_room(request, room_id):
         logger.error(f"Failed to delete room {room_id}: {e}")
         return Response(
             {'error': 'Failed to delete room'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@require_auth
+def generate_guest_link(request, room_id):
+    """Generate a temporary guest link for a room"""
+    try:
+        room_data = RoomManager.get_room_by_id(room_id)
+        if not room_data:
+            return Response({'error': 'Room not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Create a custom JWT for guest access
+        token = AccessToken()
+        token.payload['is_guest'] = True
+        token.payload['room_id'] = room_id
+
+        guest_token = str(token)
+        base_url = request.build_absolute_uri('/').rstrip('/')
+        # Construct the guest URL using the frontend path
+        guest_url = f"{base_url}/#/room/{room_id}?guest_token={guest_token}"
+
+        # Generate QR code for the guest URL
+        qr = qrcode.QRCode(version=1, box_size=10, border=5)
+        qr.add_data(guest_url)
+        qr.make(fit=True)
+        qr_image = qr.make_image(fill_color="black", back_color="white")
+        buffer = io.BytesIO()
+        qr_image.save(buffer, format='PNG')
+        qr_code_data = base64.b64encode(buffer.getvalue()).decode()
+
+        response_data = {
+            'guest_url': guest_url,
+            'guest_qr_code': f"data:image/png;base64,{qr_code_data}",
+            'guest_token': guest_token
+        }
+
+        return Response(response_data, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        logger.error(f"Failed to generate guest link for room {room_id}: {e}")
+        return Response(
+            {'error': 'Failed to generate guest link'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
