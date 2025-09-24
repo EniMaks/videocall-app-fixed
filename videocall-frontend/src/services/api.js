@@ -126,9 +126,9 @@ export const apiService = {
   },
 
   // Authentication endpoints
-  async login(password) {
+  async login(username, password) {
     await initializeCSRF()
-    return apiClient.post('/auth/login/', { password })
+    return apiClient.post('/auth/login/', { username, password })
   },
 
   async logout() {

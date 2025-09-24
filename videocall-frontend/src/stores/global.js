@@ -124,10 +124,10 @@ export const useGlobalStore = defineStore('global', () => {
     }
   }
 
-  const login = async (password) => {
+  const login = async (username, password) => {
     try {
       setLoading(true, 'loading.authenticating')
-      const response = await apiService.login(password)
+      const response = await apiService.login(username, password)
 
       if (response.data.success) {
         setAuthenticated(true)

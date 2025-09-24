@@ -23,6 +23,24 @@
       <form class="space-y-6" @submit.prevent="handleLogin">
         <div>
           <label
+            for="username"
+            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+          >
+            {{ $t('loginForm.usernameLabel') }}
+          </label>
+          <input
+            id="username"
+            v-model="username"
+            type="text"
+            :placeholder="$t('loginForm.usernamePlaceholder')"
+            class="input-field"
+            :disabled="isLoading"
+            required
+          />
+        </div>
+
+        <div>
+          <label
             for="password"
             class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
           >
@@ -71,15 +89,16 @@ import { useGlobalStore } from '../stores/global'
 const router = useRouter()
 const globalStore = useGlobalStore()
 
+const username = ref('')
 const password = ref('')
 const isLoading = ref(false)
 
 const handleLogin = async () => {
-  if (!password.value.trim()) return
+  if (!username.value.trim() || !password.value.trim()) return
 
   try {
     isLoading.value = true
-    const result = await globalStore.login(password.value)
+    const result = await globalStore.login(username.value, password.value)
 
     if (result.success) {
       const redirectTo = new URLSearchParams(window.location.search).get('redirect') || '/'

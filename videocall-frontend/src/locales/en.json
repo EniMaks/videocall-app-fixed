@@ -1,6 +1,7 @@
-{
   "loginForm": {
     "title": "Enter the access password to continue",
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "Enter username",
     "passwordLabel": "Password",
     "passwordPlaceholder": "Enter password",
     "loginButton": "Sign In",

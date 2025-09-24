@@ -1,6 +1,7 @@
-{
   "loginForm": {
     "title": "Для продолжения введите пароль доступа",
+    "usernameLabel": "Имя пользователя",
+    "usernamePlaceholder": "Введите имя пользователя",
     "passwordLabel": "Пароль",
     "passwordPlaceholder": "Введите пароль",
     "loginButton": "Войти",
