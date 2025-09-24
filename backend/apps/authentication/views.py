@@ -32,7 +32,7 @@ class LoginView(APIView):
             login(request, user)
             request.session['is_guest'] = False
             request.session['authenticated'] = True
-            return Response({'message': 'Login successful'}, status=status.HTTP_200_OK)
+            return Response({'success': True, 'message': 'Login successful'}, status=status.HTTP_200_OK)
         else:
             return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
