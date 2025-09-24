@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework_simplejwt.exceptions import TokenError
-from apps.rooms.models import Room
+from apps.rooms.models import RoomManager
 
 logger = logging.getLogger(__name__)
 
@@ -26,10 +26,8 @@ class GuestTokenGenerateView(APIView):
         if not room_id:
             return Response({'error': 'Room ID is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            # Ensure the room exists
-            room = Room.objects.get(room_id=room_id)
-        except Room.DoesNotExist:
+        room = RoomManager.get_room_by_id(room_id)
+        if not room:
             return Response({'error': 'Room not found'}, status=status.HTTP_404_NOT_FOUND)
 
         # Create a unique guest user that is not saved to the database
@@ -39,7 +37,7 @@ class GuestTokenGenerateView(APIView):
         # Generate a simple JWT
         refresh = RefreshToken.for_user(guest_user)
         refresh['is_guest'] = True
-        refresh['room_id'] = str(room.room_id)
+        refresh['room_id'] = room['room_id']
 
         return Response({'guest_token': str(refresh.access_token)}, status=status.HTTP_201_CREATED)
 
