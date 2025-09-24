@@ -1,3 +1,17 @@
+import uuid
+import logging
+from django.contrib.auth import login
+from django.contrib.auth.models import User
+from rest_framework import status
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
+from rest_framework_simplejwt.exceptions import TokenError
+from apps.rooms.models import Room
+
+logger = logging.getLogger(__name__)
+
 class GuestTokenGenerateView(APIView):
     """
     Generates a guest JWT for room access.
