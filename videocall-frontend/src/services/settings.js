@@ -1,5 +1,5 @@
 // src/services/settings.js - Settings management using localStorage
-import storage from './storage';
+import { storage } from './storage';
 
 const SETTINGS_KEY = 'user_settings';
 
