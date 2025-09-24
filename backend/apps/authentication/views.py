@@ -1,6 +1,7 @@
 import uuid
 import logging
-from django.contrib.auth import login
+from django.http import JsonResponse
+from django.contrib.auth import login, logout
 from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.permissions import AllowAny
@@ -11,6 +12,17 @@ from rest_framework_simplejwt.exceptions import TokenError
 from apps.rooms.models import RoomManager
 
 logger = logging.getLogger(__name__)
+
+def login_view(request):
+    return JsonResponse({'message': 'Login view placeholder'})
+
+def logout_view(request):
+    logout(request)
+    return JsonResponse({'message': 'Successfully logged out'})
+
+def check_auth_view(request):
+    is_authenticated = request.user.is_authenticated
+    return JsonResponse({'is_authenticated': is_authenticated})
 
 class GuestTokenGenerateView(APIView):
     """
