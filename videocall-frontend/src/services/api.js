@@ -139,6 +139,10 @@ export const apiService = {
     return apiClient.get('/auth/check/')
   },
 
+  async validateGuestToken(token) {
+    return apiClient.post('/auth/guest/validate/', { token });
+  },
+
   // Room management endpoints
   async createRoom() {
     await initializeCSRF()

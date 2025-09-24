@@ -1,5 +1,8 @@
-// src/services/storage.js - Local storage utilities
-export const storageService = {
+// src/services/storage.js - Local and session storage utilities
+
+const GUEST_TOKEN_KEY = 'guest_token'
+
+export const storage = {
   /**
    * Safely get item from localStorage
    */
@@ -51,6 +54,39 @@ export const storageService = {
       return false
     }
   },
+
+  // --- Guest Token Specific --- (uses sessionStorage)
+
+  getGuestToken() {
+    try {
+      return sessionStorage.getItem(GUEST_TOKEN_KEY)
+    } catch (error) {
+      console.warn('Failed to get guest token from sessionStorage', error)
+      return null
+    }
+  },
+
+  setGuestToken(token) {
+    try {
+      sessionStorage.setItem(GUEST_TOKEN_KEY, token)
+      return true
+    } catch (error) {
+      console.warn('Failed to set guest token in sessionStorage', error)
+      return false
+    }
+  },
+
+  clearGuestToken() {
+    try {
+      sessionStorage.removeItem(GUEST_TOKEN_KEY)
+      return true
+    } catch (error) {
+      console.warn('Failed to clear guest token from sessionStorage', error)
+      return false
+    }
+  },
+
+  // --- Utility --- 
 
   /**
    * Get storage usage information

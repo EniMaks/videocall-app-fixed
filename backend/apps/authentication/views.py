@@ -1,127 +1,66 @@
-# authentication/views.py - Authentication API views
-import hashlib
-from django.contrib.auth import login, logout
-from django.contrib.auth.models import User
-from django.contrib.sessions.models import Session
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
-from django.utils import timezone
-from datetime import timedelta
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
-from django_ratelimit.decorators import ratelimit
-from apps.core.models import SystemSettings
-import logging
-
-logger = logging.getLogger(__name__)
-
-
-def get_client_ip(request):
-    """Extract client IP address from request"""
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0].strip()
-    else:
-        ip = request.META.get('REMOTE_ADDR')
-    return ip
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-@csrf_exempt
-@ratelimit(key='ip', rate='10/min', method='POST', block=True)
-def login_view(request):
+class GuestTokenGenerateView(APIView):
     """
-    Authenticate user with system password.
-    Rate limited to prevent brute force attacks.
+    Generates a guest JWT for room access.
     """
-    try:
-        password = request.data.get('password')
+    permission_classes = [AllowAny] # Should be IsAuthenticated
 
-        if not password:
-            return Response(
-                {'error': 'Password is required'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+    def post(self, request, *args, **kwargs):
+        if not request.session.get('authenticated', False):
+            return Response({'error': 'Authentication required to generate guest links.'}, status=status.HTTP_403_FORBIDDEN)
 
-        settings_obj = SystemSettings.get_settings()
+        room_id = request.data.get('room_id')
+        if not room_id:
+            return Response({'error': 'Room ID is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if settings_obj.check_password(password):
-            # Create or get session
-            if not request.session.session_key:
-                request.session.create()
+        try:
+            # Ensure the room exists
+            room = Room.objects.get(room_id=room_id)
+        except Room.DoesNotExist:
+            return Response({'error': 'Room not found'}, status=status.HTTP_404_NOT_FOUND)
 
-            # Store authentication in session
+        # Create a unique guest user that is not saved to the database
+        guest_user = User(username=f'guest_{uuid.uuid4().hex[:10]}')
+        guest_user.is_guest_user = True # Dynamic attribute
+
+        # Generate a simple JWT
+        refresh = RefreshToken.for_user(guest_user)
+        refresh['is_guest'] = True
+        refresh['room_id'] = str(room.room_id)
+
+        return Response({'guest_token': str(refresh.access_token)}, status=status.HTTP_201_CREATED)
+
+
+class GuestTokenValidateView(APIView):
+    """
+    Validates a guest JWT and logs the user in via session.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        token = request.data.get('token')
+        if not token:
+            return Response({'error': 'Token is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            access_token = AccessToken(token)
+            access_token.verify()
+
+            if not access_token.get('is_guest'):
+                return Response({'error': 'Not a guest token'}, status=status.HTTP_403_FORBIDDEN)
+
+            # Create or get a user object for the guest
+            # Note: This user is not persisted with a password and can only be logged in via this flow
+            user, _ = User.objects.get_or_create(username=access_token['username'])
+
+            # Log the user in, creating a session
+            login(request, user)
+            request.session['is_guest'] = True
             request.session['authenticated'] = True
-            request.session['auth_timestamp'] = timezone.now().isoformat()
-            request.session['client_ip'] = get_client_ip(request)
-            request.session.save()
 
-            logger.info(f"Successful login from IP: {get_client_ip(request)}")
+            return Response({'validated': True, 'is_guest': True}, status=status.HTTP_200_OK)
 
-            return Response({
-                'success': True,
-                'message': 'Authentication successful',
-                'session_key': request.session.session_key
-            })
-        else:
-            logger.warning(f"Failed login attempt from IP: {get_client_ip(request)}")
-            return Response(
-                {'error': 'Invalid password'},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-
-    except Exception as e:
-        logger.error(f"Login failed: {e}")
-        return Response(
-            {'error': 'Authentication failed'},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-@csrf_exempt
-def logout_view(request):
-    """Clear user session and log out"""
-    try:
-        request.session.flush()
-        logger.info("User logged out successfully")
-        return Response({
-            'success': True,
-            'message': 'Logged out successfully'
-        })
-    except Exception as e:
-        logger.error(f"Logout failed: {e}")
-        return Response(
-            {'error': 'Logout failed'},
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-@csrf_exempt
-def check_auth_view(request):
-    """Check if user is authenticated"""
-    is_authenticated = request.session.get('authenticated', False)
-
-    if is_authenticated:
-        # Optional: Check session age for additional security
-        auth_timestamp = request.session.get('auth_timestamp')
-        if auth_timestamp:
-            try:
-                auth_time = timezone.datetime.fromisoformat(auth_timestamp)
-                if timezone.now() - auth_time > timedelta(hours=24):
-                    request.session.flush()
-                    is_authenticated = False
-            except (ValueError, TypeError):
-                request.session.flush()
-                is_authenticated = False
-
-    return Response({
-        'authenticated': is_authenticated,
-        'session_key': request.session.session_key if is_authenticated else None
-    })
+        except TokenError as e:
+            return Response({'error': f'Invalid token: {str(e)}'}, status=status.HTTP_401_UNAUTHORIZED)
+        except Exception as e:
+            logger.error(f"Guest token validation failed: {e}")
+            return Response({'error': 'An unexpected error occurred'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -2,11 +2,14 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { apiService } from '../services/api'
+import { storage } from '../services/storage'
 import i18n from '../i18n' // Import i18n instance
 
 export const useGlobalStore = defineStore('global', () => {
   // State
   const isAuthenticated = ref(false)
+  const isGuest = ref(false)
+  const guestToken = ref(storage.getGuestToken())
   const isLoading = ref(false)
   const loadingMessage = ref('')
   const notifications = ref([])
@@ -17,8 +20,20 @@ export const useGlobalStore = defineStore('global', () => {
   const canUseApp = computed(() => isAuthenticated.value && isOnline.value)
 
   // Actions
+  const clearAuth = () => {
+    isAuthenticated.value = false
+    isGuest.value = false
+    guestToken.value = null
+    storage.clearGuestToken()
+    // Note: We don't clear the main auth token here as it's handled by http-only cookies
+  }
+
   const setAuthenticated = (value) => {
-    isAuthenticated.value = value
+    if (!value) {
+      clearAuth()
+    } else {
+      isAuthenticated.value = value
+    }
   }
 
   const setLoading = (loading, message = '') => {
@@ -69,11 +84,41 @@ export const useGlobalStore = defineStore('global', () => {
   const checkAuthentication = async () => {
     try {
       setLoading(true, 'loading.checkingAuth')
+      // First, check for a guest token in storage
+      if (guestToken.value) {
+        await authenticateGuest(guestToken.value)
+        if (isAuthenticated.value) {
+          return // Guest auth successful
+        }
+      }
+      // If not a guest, check for regular auth
       const response = await apiService.checkAuth()
       setAuthenticated(response.data.authenticated)
     } catch (error) {
       console.error('Auth check failed:', error)
-      setAuthenticated(false)
+      clearAuth()
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const authenticateGuest = async (token) => {
+    try {
+      setLoading(true, 'loading.authenticatingGuest')
+      await apiService.validateGuestToken(token)
+      
+      // If validation is successful
+      isAuthenticated.value = true
+      isGuest.value = true
+      guestToken.value = token
+      storage.setGuestToken(token)
+      addNotification('notifications.guestLoginSuccess', 'success', 3000)
+      return true
+    } catch (error) {
+      console.error('Guest authentication failed:', error)
+      clearAuth()
+      addNotification('notifications.guestLoginFailed', 'error', 5000)
+      return false
     } finally {
       setLoading(false)
     }
@@ -103,19 +148,20 @@ export const useGlobalStore = defineStore('global', () => {
   const logout = async () => {
     try {
       await apiService.logout()
-      setAuthenticated(false)
-      addNotification('notifications.logoutSuccess', 'info', 3000)
     } catch (error) {
       console.error('Logout failed:', error)
-      // Force logout even if API call fails
-      setAuthenticated(false)
-      addNotification('notifications.loggedOut', 'info', 3000)
+    } finally {
+      // Always clear auth on frontend regardless of API result
+      clearAuth()
+      addNotification('notifications.logoutSuccess', 'info', 3000)
     }
   }
 
   return {
     // State
     isAuthenticated,
+    isGuest,
+    guestToken,
     isLoading,
     loadingMessage,
     notifications,
@@ -134,6 +180,7 @@ export const useGlobalStore = defineStore('global', () => {
     setDarkMode,
     setNetworkStatus,
     checkAuthentication,
+    authenticateGuest,
     login,
     logout,
   }

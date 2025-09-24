@@ -67,7 +67,7 @@ const routes = [
     name: 'JoinRoom',
     component: JoinRoom,
     meta: {
-      requiresAuth: true,
+      requiresAuth: false, // Allow guests to access this page to be authenticated by token
       title: 'Join Room',
       description: 'Join video call by room code',
       showInNav: false,
@@ -201,6 +201,18 @@ router.beforeEach(async (to, from, next) => {
   // Handle loading state
   if (to.name !== from.name) {
     globalStore.setLoading(true, 'Loading page...')
+  }
+
+  // Handle guest token authentication
+  if (to.query.guest_token) {
+    const token = to.query.guest_token
+    await globalStore.authenticateGuest(token)
+
+    // Clean up URL
+    const newQuery = { ...to.query }
+    delete newQuery.guest_token
+    next({ ...to, query: newQuery, replace: true })
+    return
   }
 
   // Check authentication requirement
