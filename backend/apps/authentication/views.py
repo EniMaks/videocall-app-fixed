@@ -13,8 +13,28 @@ from apps.rooms.models import RoomManager
 
 logger = logging.getLogger(__name__)
 
-def login_view(request):
-    return JsonResponse({'message': 'Login view placeholder'})
+from django.contrib.auth import authenticate
+
+
+class LoginView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        username = request.data.get('username')
+        password = request.data.get('password')
+
+        if not username or not password:
+            return Response({'error': 'Username and password are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            request.session['is_guest'] = False
+            request.session['authenticated'] = True
+            return Response({'message': 'Login successful'}, status=status.HTTP_200_OK)
+        else:
+            return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
 def logout_view(request):
     logout(request)

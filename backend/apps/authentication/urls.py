@@ -5,7 +5,7 @@ from . import views
 app_name = 'authentication'
 
 urlpatterns = [
-    path('login/', views.login_view, name='login'),
+    path('login/', views.LoginView.as_view(), name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('check/', views.check_auth_view, name='check'),
     path('guest/generate/', views.GuestTokenGenerateView.as_view(), name='guest_generate'),
