@@ -206,12 +206,19 @@ router.beforeEach(async (to, from, next) => {
   // Handle guest token authentication
   if (to.query.guest_token) {
     const token = to.query.guest_token
-    await globalStore.authenticateGuest(token)
+    const success = await globalStore.authenticateGuest(token)
 
     // Clean up URL
     const newQuery = { ...to.query }
     delete newQuery.guest_token
-    next({ ...to, query: newQuery, replace: true })
+
+    if (success) {
+      // If guest auth is successful, proceed to the intended page
+      next({ ...to, query: newQuery, replace: true })
+    } else {
+      // If guest auth fails, redirect to login
+      next({ name: 'Login', query: { redirect: to.path } })
+    }
     return
   }
 
