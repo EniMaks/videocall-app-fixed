@@ -1,7 +1,7 @@
 # rooms/views.py - Room management API views
 from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from django_ratelimit.decorators import ratelimit
@@ -16,22 +16,8 @@ from rest_framework_simplejwt.tokens import AccessToken
 logger = logging.getLogger(__name__)
 
 
-def require_auth(view_func):
-    """Decorator to require authentication for views"""
-    def wrapper(request, *args, **kwargs):
-        if not request.session.get('authenticated'):
-            logger.warning(f"Unauthenticated access attempt to {request.path}")
-            return Response(
-                {'error': 'Authentication required'},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-        return view_func(request, *args, **kwargs)
-    return wrapper
-
-
 @api_view(['POST'])
-@permission_classes([AllowAny])
-@require_auth
+@permission_classes([IsAuthenticated])
 @ratelimit(key='ip', rate='30/min', method='POST', block=True)
 def create_room(request):
     """Create a new video call room"""
@@ -75,8 +61,7 @@ def create_room(request):
 
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
-@require_auth
+@permission_classes([IsAuthenticated])
 def get_room(request, room_id):
     """Get room information by room ID"""
     try:
@@ -123,8 +108,7 @@ def get_room(request, room_id):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
-@require_auth
+@permission_classes([IsAuthenticated])
 @ratelimit(key='ip', rate='60/min', method='POST', block=True)
 def join_room(request):
     """Join a room by room ID or short code"""
@@ -180,8 +164,7 @@ def join_room(request):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
-@require_auth
+@permission_classes([IsAuthenticated])
 def leave_room(request, room_id):
     """Leave a room"""
     try:
@@ -237,8 +220,7 @@ def leave_room(request, room_id):
 
 
 @api_view(['DELETE'])
-@permission_classes([AllowAny])
-@require_auth
+@permission_classes([IsAuthenticated])
 def delete_room(request, room_id):
     """Delete a room (only creator or admin can delete)"""
     try:
@@ -276,8 +258,7 @@ def delete_room(request, room_id):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
-@require_auth
+@permission_classes([IsAuthenticated])
 def generate_guest_link(request, room_id):
     """Generate a temporary guest link for a room"""
     try:
@@ -321,8 +302,7 @@ def generate_guest_link(request, room_id):
 
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
-@require_auth
+@permission_classes([IsAuthenticated])
 def health_check(request):
     """API health check endpoint"""
     return Response({

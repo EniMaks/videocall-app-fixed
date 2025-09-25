@@ -67,10 +67,12 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useRoomsStore } from '../stores/rooms'
+import { useGlobalStore } from '../stores/global'
 
 const route = useRoute()
 const router = useRouter()
 const roomsStore = useRoomsStore()
+const globalStore = useGlobalStore()
 
 const roomCode = ref('')
 const isJoining = ref(false)
@@ -80,6 +82,12 @@ onMounted(() => {
   roomCode.value = route.params.shortCode
   if (!roomCode.value) {
     router.push('/')
+    return
+  }
+
+  // If the user is a guest, attempt to join the room automatically
+  if (globalStore.isGuest) {
+    joinRoom()
   }
 })
 
