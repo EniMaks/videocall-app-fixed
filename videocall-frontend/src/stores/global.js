@@ -82,20 +82,25 @@ export const useGlobalStore = defineStore('global', () => {
   }
 
   const checkAuthentication = async () => {
+    console.log('[Store] checkAuthentication: Starting auth check.');
     try {
       setLoading(true, 'loading.checkingAuth')
       // First, check for a guest token in storage
       if (guestToken.value) {
+        console.log('[Store] checkAuthentication: Found guest token in storage. Authenticating as guest.');
         await authenticateGuest(guestToken.value)
         if (isAuthenticated.value) {
+          console.log('[Store] checkAuthentication: Guest auth from storage successful.');
           return // Guest auth successful
         }
       }
       // If not a guest, check for regular auth
+      console.log('[Store] checkAuthentication: No valid guest token. Checking for regular auth session.');
       const response = await apiService.checkAuth()
       setAuthenticated(response.data.authenticated)
+      console.log(`[Store] checkAuthentication: Regular auth check returned: ${response.data.authenticated}`);
     } catch (error) {
-      console.error('Auth check failed:', error)
+      console.error('[Store] checkAuthentication: Auth check failed:', error)
       clearAuth()
     } finally {
       setLoading(false)
@@ -103,6 +108,7 @@ export const useGlobalStore = defineStore('global', () => {
   }
 
   const authenticateGuest = async (token) => {
+    console.log('[Store] authenticateGuest: Attempting to validate guest token...', token);
     try {
       setLoading(true, 'loading.authenticatingGuest')
       await apiService.validateGuestToken(token)
@@ -112,10 +118,11 @@ export const useGlobalStore = defineStore('global', () => {
       isGuest.value = true
       guestToken.value = token
       storage.setGuestToken(token)
+      console.log('[Store] authenticateGuest: Token validation successful.');
       addNotification('notifications.guestLoginSuccess', 'success', 3000)
       return true
     } catch (error) {
-      console.error('Guest authentication failed:', error)
+      console.error('[Store] authenticateGuest: Guest authentication failed:', error)
       clearAuth()
       addNotification('notifications.guestLoginFailed', 'error', 5000)
       return false

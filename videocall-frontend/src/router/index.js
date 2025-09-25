@@ -205,17 +205,21 @@ router.beforeEach(async (to, from, next) => {
 
   // Handle guest token authentication
   if (to.query.guest_token) {
+    console.log('[Router Guard] Found guest_token in URL:', to.query.guest_token);
     const token = to.query.guest_token
     const success = await globalStore.authenticateGuest(token)
+    console.log(`[Router Guard] authenticateGuest returned: ${success}`);
 
     // Clean up URL
     const newQuery = { ...to.query }
     delete newQuery.guest_token
 
     if (success) {
+      console.log('[Router Guard] Guest auth successful. Redirecting to cleaned URL...', { ...to, query: newQuery });
       // If guest auth is successful, proceed to the intended page
       next({ ...to, query: newQuery, replace: true })
     } else {
+      console.log('[Router Guard] Guest auth failed. Redirecting to Login.');
       // If guest auth fails, redirect to login
       next({ name: 'Login', query: { redirect: to.path } })
     }
@@ -226,25 +230,31 @@ router.beforeEach(async (to, from, next) => {
   const requiresAuth = to.meta.requiresAuth
   const hideForAuth = to.meta.hideForAuth
   const isAuthenticated = globalStore.isAuthenticated
+  console.log(`[Router Guard] Checking auth requirements. requiresAuth: ${requiresAuth}, isAuthenticated: ${isAuthenticated}`);
 
   // If route should be hidden for authenticated users
   if (hideForAuth && isAuthenticated) {
     const redirectTo = to.query.redirect || from.fullPath || '/'
+    console.log(`[Router Guard] Route has hideForAuth=true and user is authenticated. Redirecting to: ${redirectTo}`);
     next(redirectTo)
     return
   }
 
   // If route requires auth and user is not authenticated
   if (requiresAuth && !isAuthenticated) {
+    console.log('[Router Guard] Route requires auth, but user is not authenticated. Running checkAuthentication()...');
     // Try to check auth status from server first
     await globalStore.checkAuthentication()
+    console.log(`[Router Guard] checkAuthentication() finished. isAuthenticated is now: ${globalStore.isAuthenticated}`);
 
     if (!globalStore.isAuthenticated) {
+      console.log('[Router Guard] Still not authenticated. Redirecting to Login.');
       // Store intended destination
       const redirectQuery = to.fullPath !== '/' ? { redirect: to.fullPath } : {}
       next({ name: 'Login', query: redirectQuery })
       return
     }
+     console.log('[Router Guard] Now authenticated. Proceeding.');
   }
 
   // Handle special route logic
