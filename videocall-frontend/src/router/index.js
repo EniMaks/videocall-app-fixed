@@ -193,6 +193,21 @@ router.beforeEach(async (to, from, next) => {
   const globalStore = useGlobalStore()
   const roomsStore = useRoomsStore()
 
+  // Workaround for guest_token being in the hash
+  let guestToken = to.query.guest_token;
+  if (!guestToken && to.hash.includes('guest_token=')) {
+    console.log('[Router Guard] Found guest_token in hash. Parsing manually.');
+    try {
+        const hashQuery = to.hash.split('?')[1];
+        if (hashQuery) {
+            const params = new URLSearchParams(hashQuery);
+            guestToken = params.get('guest_token');
+        }
+    } catch (e) {
+        console.error('Error parsing guest_token from hash', e);
+    }
+  }
+
   console.log(`Navigating from ${from.name} to ${to.name}`)
 
   // Set document title and meta tags
@@ -204,26 +219,21 @@ router.beforeEach(async (to, from, next) => {
   }
 
   // Handle guest token authentication
-  if (to.query.guest_token) {
-    console.log('[Router Guard] Found guest_token in URL:', to.query.guest_token);
-    const token = to.query.guest_token
-    const success = await globalStore.authenticateGuest(token)
+  if (guestToken) {
+    console.log('[Router Guard] Processing guest_token:', guestToken);
+    const success = await globalStore.authenticateGuest(guestToken);
     console.log(`[Router Guard] authenticateGuest returned: ${success}`);
 
-    // Clean up URL
-    const newQuery = { ...to.query }
-    delete newQuery.guest_token
-
     if (success) {
-      console.log('[Router Guard] Guest auth successful. Redirecting to cleaned URL...', { ...to, query: newQuery });
-      // If guest auth is successful, proceed to the intended page
-      next({ ...to, query: newQuery, replace: true })
+      // Auth is successful. We need to navigate to the correct page without the token.
+      const cleanHash = to.hash.split('?')[0];
+      console.log(`[Router Guard] Guest auth successful. Redirecting to clean hash: ${cleanHash}`);
+      next({ path: to.path, hash: cleanHash, replace: true });
     } else {
       console.log('[Router Guard] Guest auth failed. Redirecting to Login.');
-      // If guest auth fails, redirect to login
-      next({ name: 'Login', query: { redirect: to.path } })
+      next({ name: 'Login', query: { redirect: to.path } });
     }
-    return
+    return;
   }
 
   // Check authentication requirement
