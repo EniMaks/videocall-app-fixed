@@ -1,5 +1,5 @@
 // src/services/settings.js - Settings management using localStorage
-import { storage } from './storage';
+import { storage as localStorageService } from './storage';
 
 const SETTINGS_KEY = 'user_settings';
 
@@ -17,7 +17,7 @@ export const settingsService = {
    * Get all settings
    */
   getSettings() {
-    const settings = storage.get(SETTINGS_KEY, {});
+    const settings = localStorageService.getItem(SETTINGS_KEY, {});
     return { ...defaultSettings, ...settings };
   },
 
@@ -25,7 +25,7 @@ export const settingsService = {
    * Save all settings
    */
   saveSettings(settings) {
-    storage.set(SETTINGS_KEY, settings);
+    storage.setItem(SETTINGS_KEY, settings);
   },
 
   /**

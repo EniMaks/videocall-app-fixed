@@ -643,7 +643,7 @@ const connectionStatusColor = computed(() => {
 })
 
 const participantCount = computed(() => {
-  return webrtcStore.remoteParticipants.length + 1 // +1 for local participant
+  return (webrtcStore.remoteParticipants?.length || 0) + 1 // +1 for local participant
 })
 
 const roomLink = computed(() => {
@@ -772,6 +772,9 @@ const initializeCall = async () => {
     connectingSubMessage.value = t('loading.promptPermissions')
 
     // Initialize media
+    if (typeof webrtcStore.initializeLocalMedia !== 'function') {
+      throw new Error('WebRTC store not initialized correctly.');
+    }
     const mediaResult = await webrtcStore.initializeLocalMedia()
     if (!mediaResult.success) {
       globalStore.addNotification(t('webrtc.mediaAccessFailed'), 'error')
