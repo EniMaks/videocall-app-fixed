@@ -92,9 +92,9 @@ class GuestTokenValidateView(APIView):
             if not access_token.get('is_guest'):
                 return Response({'error': 'Not a guest token'}, status=status.HTTP_403_FORBIDDEN)
 
-            # Create or get a user object for the guest
-            # Note: This user is not persisted with a password and can only be logged in via this flow
-            user, _ = User.objects.get_or_create(username=access_token['username'])
+            # Create a unique username for the guest based on the token's JTI
+            guest_username = f"guest_{access_token['jti']}"
+            user, _ = User.objects.get_or_create(username=guest_username)
 
             # Log the user in, creating a session
             login(request, user)
