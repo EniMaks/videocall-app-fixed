@@ -113,15 +113,3 @@ const handleLogin = async () => {
   }
 }
 </script>
-
-<style scoped>
-/* Ensure dark theme styles are applied properly */
-:deep(.card) {
-  transition: background-color 0.3s ease, border-color 0.3s ease;
-}
-
-:global(.dark) :deep(.card) {
-  background-color: rgb(31 41 55) !important; /* gray-800 */
-  border-color: rgb(55 65 81) !important; /* gray-700 */
-}
-</style>

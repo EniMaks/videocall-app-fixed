@@ -87,12 +87,6 @@
   }
 }
 
-/* Force dark mode styles when dark class is present */
-.dark .card {
-  background-color: rgb(31 41 55) !important; /* gray-800 */
-  border-color: rgb(55 65 81) !important; /* gray-700 */
-}
-
 html.dark,
 body.dark {
   color-scheme: dark;

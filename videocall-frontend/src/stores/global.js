@@ -76,10 +76,15 @@ export const useGlobalStore = defineStore('global', () => {
     if (dark) {
       document.documentElement.classList.add('dark')
       document.body.classList.add('dark')
+      console.log('[Store] Applied dark theme classes')
     } else {
       document.documentElement.classList.remove('dark')
       document.body.classList.remove('dark')
+      console.log('[Store] Removed dark theme classes')
     }
+    
+    // Force a style recalculation
+    document.documentElement.style.colorScheme = dark ? 'dark' : 'light'
     
     // Save to localStorage if user manually triggered the change
     if (userTriggered) {
