@@ -221,14 +221,13 @@ router.beforeEach(async (to, from, next) => {
   // Handle guest token authentication
   if (guestToken) {
     console.log('[Router Guard] Processing guest_token:', guestToken);
-    const success = await globalStore.authenticateGuest(guestToken);
-    console.log(`[Router Guard] authenticateGuest returned: ${success}`);
+    const authResult = await globalStore.authenticateGuest(guestToken);
+    console.log(`[Router Guard] authenticateGuest returned:`, authResult);
 
-    if (success) {
+    if (authResult.success && authResult.room) {
       // Auth is successful. We need to navigate to the correct page without the token.
-      const cleanHash = to.hash.split('?')[0];
-      console.log(`[Router Guard] Guest auth successful. Redirecting to clean hash: ${cleanHash}`);
-      next({ path: to.path, hash: cleanHash, replace: true });
+      console.log(`[Router Guard] Guest auth successful. Redirecting to room: ${authResult.room.room_id}`);
+      next({ name: 'VideoCall', params: { roomId: authResult.room.room_id }, replace: true });
     } else {
       console.log('[Router Guard] Guest auth failed. Redirecting to Login.');
       next({ name: 'Login', query: { redirect: to.path } });

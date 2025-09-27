@@ -111,7 +111,7 @@ export const useGlobalStore = defineStore('global', () => {
     console.log('[Store] authenticateGuest: Attempting to validate guest token...', token);
     try {
       setLoading(true, 'loading.authenticatingGuest')
-      await apiService.validateGuestToken(token)
+      const response = await apiService.validateGuestToken(token)
       
       // If validation is successful
       isAuthenticated.value = true
@@ -120,12 +120,12 @@ export const useGlobalStore = defineStore('global', () => {
       storage.setGuestToken(token)
       console.log('[Store] authenticateGuest: Token validation successful.');
       addNotification('notifications.guestLoginSuccess', 'success', 3000)
-      return true
+      return { success: true, room: response.data.room }
     } catch (error) {
       console.error('[Store] authenticateGuest: Guest authentication failed:', error)
       clearAuth()
       addNotification('notifications.guestLoginFailed', 'error', 5000)
-      return false
+      return { success: false }
     } finally {
       setLoading(false)
     }
