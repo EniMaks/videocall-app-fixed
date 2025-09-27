@@ -4,7 +4,7 @@
   <div ref="callContainer" class="h-screen bg-black flex flex-col">
     <!-- Header -->
     <header
-      class="bg-gray-900 text-white p-4 flex items-center justify-between z-10 safe-area-inset"
+      class="bg-gray-900 dark:bg-gray-800 text-white p-4 flex items-center justify-between z-10 safe-area-inset"
     >
       <div class="flex items-center space-x-4">
         <h1 class="text-lg font-medium">{{ $t('videoCall.roomTitle', { code: roomInfo?.short_code }) }}</h1>
@@ -102,7 +102,7 @@
     </header>
 
     <!-- Video Container -->
-    <div class="flex-1 relative overflow-hidden">
+    <div class="flex-1 relative overflow-hidden bg-black dark:bg-gray-900 transition-colors">
       <!-- Remote Video (main) -->
       <div v-if="webrtcStore.hasRemoteVideo" class="absolute inset-0">
         <video
@@ -125,11 +125,11 @@
       <!-- No remote video placeholder -->
       <div
         v-else
-        class="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-gray-800 to-gray-900"
+        class="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-gray-800 to-gray-900 dark:from-gray-700 dark:to-gray-800 transition-colors"
       >
         <div class="text-center text-white max-w-md mx-auto p-8">
           <div
-            class="w-32 h-32 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce-gentle"
+            class="w-32 h-32 bg-gray-700 dark:bg-gray-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce-gentle transition-colors"
           >
             <svg
               class="w-16 h-16 text-gray-500"
@@ -147,7 +147,7 @@
           </div>
           <h3 class="text-xl font-medium mb-2">{{ waitingMessage }}</h3>
           <p class="text-gray-400 mb-4">{{ $t('videoCall.invitePrompt') }}</p>
-          <div class="bg-gray-800 px-4 py-3 rounded-xl">
+          <div class="bg-gray-800 dark:bg-gray-700 px-4 py-3 rounded-xl transition-colors">
             <p class="font-mono font-bold text-2xl tracking-wider text-green-400">
               {{ roomInfo?.short_code }}
             </p>
@@ -224,7 +224,7 @@
         <!-- Camera off indicator -->
         <div
           v-if="!webrtcStore.isVideoEnabled"
-          class="absolute inset-0 bg-gray-800 flex items-center justify-center"
+          class="absolute inset-0 bg-gray-800 dark:bg-gray-700 flex items-center justify-center transition-colors"
         >
           <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -259,7 +259,7 @@
     </div>
 
     <!-- Controls -->
-    <div class="bg-gradient-to-t from-gray-900 to-gray-800 py-4 safe-area-inset">
+    <div class="bg-gradient-to-t from-gray-900 to-gray-800 dark:from-gray-800 dark:to-gray-700 py-4 safe-area-inset transition-colors">
       <div class="max-w-md mx-auto flex items-center justify-center space-x-6">
         <!-- Toggle Audio -->
         <button
