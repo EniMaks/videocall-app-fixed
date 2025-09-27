@@ -1,5 +1,5 @@
 <template>
-  <div class="about-page py-12 px-4 sm:px-6 lg:px-8">
+  <div class="about-page py-12 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900 transition-colors">
     <div class="max-w-3xl mx-auto">
       <h1 class="text-3xl font-extrabold text-gray-900 dark:text-white text-center">About This Application</h1>
       <p class="mt-4 text-lg text-gray-600 dark:text-gray-300 text-center">
@@ -40,12 +40,3 @@
     </div>
   </div>
 </template>
-
-<style scoped>
-.about-page {
-  background-color: #f9fafb;
-}
-.dark .about-page {
-  background-color: #111827;
-}
-</style>

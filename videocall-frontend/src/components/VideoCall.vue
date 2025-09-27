@@ -1,14 +1,14 @@
 <!-- src/components/VideoCall.vue - Complete main video call component -->
 <!-- src/components/VideoCall.vue - Complete main video call component -->
 <template>
-  <div ref="callContainer" class="h-screen bg-black flex flex-col">
+  <div ref="callContainer" class="h-screen bg-gray-50 dark:bg-black flex flex-col transition-colors">
     <!-- Header -->
     <header
-      class="bg-gray-900 text-white p-4 flex items-center justify-between z-10 safe-area-inset"
+      class="bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-4 flex items-center justify-between z-10 safe-area-inset border-b border-gray-200 dark:border-gray-700 transition-colors"
     >
       <div class="flex items-center space-x-4">
         <h1 class="text-lg font-medium">{{ $t('videoCall.roomTitle', { code: roomInfo?.short_code }) }}</h1>
-        <div class="flex items-center space-x-2 text-sm text-gray-300">
+        <div class="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
           <div :class="['w-2 h-2 rounded-full animate-pulse', connectionStatusColor]"></div>
           <span>{{ connectionStatusText }}</span>
         </div>
@@ -16,12 +16,12 @@
 
       <div class="flex items-center space-x-4">
         <!-- Call duration -->
-        <div v-if="callDuration > 0" class="text-sm text-gray-300 font-mono">
+        <div v-if="callDuration > 0" class="text-sm text-gray-600 dark:text-gray-300 font-mono">
           {{ utils.formatDuration(callDuration) }}
         </div>
 
         <!-- Participants count -->
-        <div class="flex items-center space-x-1 text-sm text-gray-300">
+        <div class="flex items-center space-x-1 text-sm text-gray-600 dark:text-gray-300">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
@@ -35,7 +35,7 @@
 
         <!-- Menu button -->
         <button
-          class="p-2 hover:bg-gray-800 rounded-full transition-colors relative"
+          class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors relative"
           @click="showMenu = !showMenu"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,7 +102,7 @@
     </header>
 
     <!-- Video Container -->
-    <div class="flex-1 relative overflow-hidden">
+    <div class="flex-1 relative overflow-hidden bg-gray-100 dark:bg-black transition-colors">
       <!-- Remote Video (main) -->
       <div v-if="webrtcStore.hasRemoteVideo" class="absolute inset-0">
         <video
@@ -116,7 +116,7 @@
         <!-- Remote video overlay info -->
         <div
           v-if="showVideoInfo"
-          class="absolute top-4 left-4 bg-black bg-opacity-50 px-3 py-2 rounded-lg text-white text-sm"
+          class="absolute top-4 left-4 bg-black bg-opacity-50 dark:bg-gray-800 dark:bg-opacity-90 px-3 py-2 rounded-lg text-white text-sm"
         >
           <p>{{ remoteVideoInfo }}</p>
         </div>
@@ -125,14 +125,14 @@
       <!-- No remote video placeholder -->
       <div
         v-else
-        class="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-gray-800 to-gray-900"
+        class="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-gray-200 to-gray-100 dark:from-gray-800 dark:to-gray-900 transition-colors"
       >
-        <div class="text-center text-white max-w-md mx-auto p-8">
+        <div class="text-center text-gray-800 dark:text-white max-w-md mx-auto p-8">
           <div
-            class="w-32 h-32 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce-gentle"
+            class="w-32 h-32 bg-gray-300 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce-gentle transition-colors"
           >
             <svg
-              class="w-16 h-16 text-gray-500"
+              class="w-16 h-16 text-gray-600 dark:text-gray-500"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -146,9 +146,9 @@
             </svg>
           </div>
           <h3 class="text-xl font-medium mb-2">{{ waitingMessage }}</h3>
-          <p class="text-gray-400 mb-4">{{ $t('videoCall.invitePrompt') }}</p>
-          <div class="bg-gray-800 px-4 py-3 rounded-xl">
-            <p class="font-mono font-bold text-2xl tracking-wider text-green-400">
+          <p class="text-gray-600 dark:text-gray-400 mb-4">{{ $t('videoCall.invitePrompt') }}</p>
+          <div class="bg-white dark:bg-gray-800 px-4 py-3 rounded-xl transition-colors border border-gray-200 dark:border-gray-700">
+            <p class="font-mono font-bold text-2xl tracking-wider text-green-600 dark:text-green-400">
               {{ roomInfo?.short_code }}
             </p>
           </div>
@@ -224,7 +224,7 @@
         <!-- Camera off indicator -->
         <div
           v-if="!webrtcStore.isVideoEnabled"
-          class="absolute inset-0 bg-gray-800 flex items-center justify-center"
+          class="absolute inset-0 bg-gray-200 dark:bg-gray-800 flex items-center justify-center transition-colors"
         >
           <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -240,7 +240,7 @@
       <!-- Connection quality indicator -->
       <div
         v-if="connectionStats && showConnectionQuality"
-        class="absolute top-4 right-4 bg-black bg-opacity-50 px-3 py-2 rounded-lg text-white text-sm z-10"
+        class="absolute top-4 right-4 bg-black bg-opacity-50 dark:bg-gray-800 dark:bg-opacity-90 px-3 py-2 rounded-lg text-white dark:text-gray-200 text-sm z-10 transition-colors"
       >
         <div class="flex items-center space-x-2">
           <div
@@ -259,7 +259,7 @@
     </div>
 
     <!-- Controls -->
-    <div class="bg-gradient-to-t from-gray-900 to-gray-800 py-4 safe-area-inset">
+    <div class="bg-gradient-to-t from-gray-200 to-gray-100 dark:from-gray-900 dark:to-gray-800 py-4 safe-area-inset transition-colors border-t border-gray-300 dark:border-gray-700">
       <div class="max-w-md mx-auto flex items-center justify-center space-x-6">
         <!-- Toggle Audio -->
         <button
@@ -370,7 +370,7 @@
       </div>
 
       <!-- Connection status message -->
-      <div v-if="connectionMessage" class="mt-4 text-center text-sm text-gray-400">
+      <div v-if="connectionMessage" class="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
         {{ connectionMessage }}
       </div>
     </div>
@@ -528,7 +528,7 @@
             </div>
           </div>
 
-          <div v-else class="text-center py-8 text-gray-500">
+          <div v-else class="text-center py-8 text-gray-500 dark:text-gray-400">
             <p>{{ $t('videoCall.noStats') }}</p>
           </div>
 
@@ -542,14 +542,14 @@
     <!-- Full screen loading overlay -->
     <div
       v-if="isConnecting"
-      class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+      class="fixed inset-0 bg-black bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-90 flex items-center justify-center z-50"
     >
-      <div class="text-center text-white">
+      <div class="text-center text-white dark:text-gray-200">
         <div
           class="animate-spin rounded-full h-16 w-16 border-b-2 border-green-500 mx-auto mb-4"
         ></div>
         <h3 class="text-xl font-medium mb-2">{{ connectingMessage }}</h3>
-        <p class="text-gray-300">{{ connectingSubMessage }}</p>
+        <p class="text-gray-300 dark:text-gray-400">{{ connectingSubMessage }}</p>
       </div>
     </div>
   </div>

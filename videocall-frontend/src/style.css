@@ -5,7 +5,7 @@
 
 /* Custom component styles */
 .card {
-  @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700;
+  @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 transition-colors duration-300;
 }
 
 .btn-primary {
@@ -85,6 +85,11 @@
   :root {
     color-scheme: dark;
   }
+}
+
+html.dark,
+body.dark {
+  color-scheme: dark;
 }
 
 /* Mobile responsive adjustments */

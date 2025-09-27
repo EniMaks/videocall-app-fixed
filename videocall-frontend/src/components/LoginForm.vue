@@ -82,7 +82,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useGlobalStore } from '../stores/global'
 
@@ -92,6 +92,8 @@ const globalStore = useGlobalStore()
 const username = ref('')
 const password = ref('')
 const isLoading = ref(false)
+
+const isDarkMode = computed(() => globalStore.isDarkMode)
 
 const handleLogin = async () => {
   if (!username.value.trim() || !password.value.trim()) return
