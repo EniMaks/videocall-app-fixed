@@ -92,6 +92,16 @@ class GuestTokenValidateView(APIView):
             if not access_token.get('is_guest'):
                 return Response({'error': 'Not a guest token'}, status=status.HTTP_403_FORBIDDEN)
 
+            # Extract room_id from token
+            room_id = access_token.get('room_id')
+            if not room_id:
+                return Response({'error': 'Invalid guest token: missing room_id'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Verify the room exists
+            room_data = RoomManager.get_room_by_id(room_id)
+            if not room_data:
+                return Response({'error': 'Room not found or has expired'}, status=status.HTTP_404_NOT_FOUND)
+
             # Create a unique username for the guest based on the token's JTI
             guest_username = f"guest_{access_token['jti']}"
             user, _ = User.objects.get_or_create(username=guest_username)
@@ -101,7 +111,14 @@ class GuestTokenValidateView(APIView):
             request.session['is_guest'] = True
             request.session['authenticated'] = True
 
-            return Response({'validated': True, 'is_guest': True}, status=status.HTTP_200_OK)
+            return Response({
+                'validated': True, 
+                'is_guest': True,
+                'room': {
+                    'room_id': room_data['room_id'],
+                    'short_code': room_data['short_code']
+                }
+            }, status=status.HTTP_200_OK)
 
         except TokenError as e:
             return Response({'error': f'Invalid token: {str(e)}'}, status=status.HTTP_401_UNAUTHORIZED)
