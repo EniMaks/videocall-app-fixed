@@ -25,6 +25,7 @@ export const useGlobalStore = defineStore('global', () => {
     isGuest.value = false
     guestToken.value = null
     storage.clearGuestToken()
+    apiService.setGuestToken(null)
     // Note: We don't clear the main auth token here as it's handled by http-only cookies
   }
 
@@ -118,6 +119,7 @@ export const useGlobalStore = defineStore('global', () => {
       isGuest.value = true
       guestToken.value = token
       storage.setGuestToken(token)
+      apiService.setGuestToken(token) // Set the token in the api service
       console.log('[Store] authenticateGuest: Token validation successful.');
       addNotification('notifications.guestLoginSuccess', 'success', 3000)
       return { success: true, room: response.data.room }

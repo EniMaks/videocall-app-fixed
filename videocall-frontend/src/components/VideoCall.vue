@@ -847,11 +847,21 @@ const handleEndCall = async () => {
       })
     }
 
-    router.push('/')
+    if (globalStore.isGuest) {
+      await globalStore.logout();
+      router.push('/login');
+    } else {
+      router.push('/');
+    }
   } catch (error) {
     console.error('Failed to end call properly:', error)
     // Force navigate even if there's an error
-    router.push('/')
+    if (globalStore.isGuest) {
+      await globalStore.logout();
+      router.push('/login');
+    } else {
+      router.push('/');
+    }
   }
 }
 

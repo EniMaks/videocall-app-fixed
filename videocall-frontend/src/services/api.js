@@ -28,6 +28,8 @@ const getCSRFToken = () => {
   return cookieValue
 }
 
+let guestToken = null;
+
 // Request interceptor for adding auth headers and logging
 apiClient.interceptors.request.use(
   (config) => {
@@ -39,6 +41,10 @@ apiClient.interceptors.request.use(
       if (csrfToken) {
         config.headers['X-CSRFToken'] = csrfToken
       }
+    }
+
+    if (guestToken) {
+      config.headers['Authorization'] = `Bearer ${guestToken}`;
     }
 
     return config
@@ -120,6 +126,9 @@ const initializeCSRF = async () => {
 
 // API service object with all endpoint methods
 export const apiService = {
+  setGuestToken(token) {
+    guestToken = token;
+  },
   // Initialize CSRF
   async initialize() {
     await initializeCSRF()
@@ -264,4 +273,3 @@ export const apiUtils = {
     throw lastError
   },
 }
-
