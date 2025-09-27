@@ -259,11 +259,23 @@ router.beforeEach(async (to, from, next) => {
     if (!globalStore.isAuthenticated) {
       console.log('[Router Guard] Still not authenticated. Redirecting to Login.');
       // Store intended destination
-      const redirectQuery = to.fullPath !== '/' ? { redirect: to.fullPath } : {}
-      next({ name: 'Login', query: redirectQuery })
-      return
+      if (to.name !== 'Login' && to.fullPath !== '/') {
+        globalStore.setRedirect(to.fullPath);
+      }
+      next({ name: 'Login' });
+      return;
     }
-     console.log('[Router Guard] Now authenticated. Proceeding.');
+
+    // If there's a redirect path in the store, use it
+    const redirectPath = globalStore.redirect;
+    if (redirectPath) {
+      console.log(`[Router Guard] Found redirect path: ${redirectPath}. Redirecting...`);
+      globalStore.clearRedirect();
+      next(redirectPath);
+      return;
+    }
+
+    console.log('[Router Guard] Now authenticated. Proceeding.');
   }
 
   // Handle special route logic
