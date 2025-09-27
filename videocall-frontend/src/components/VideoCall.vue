@@ -146,9 +146,9 @@
             </svg>
           </div>
           <h3 class="text-xl font-medium mb-2">{{ waitingMessage }}</h3>
-          <p class="text-gray-400 mb-4">{{ $t('videoCall.invitePrompt') }}</p>
-          <div class="bg-gray-800 dark:bg-gray-700 px-4 py-3 rounded-xl transition-colors">
-            <p class="font-mono font-bold text-2xl tracking-wider text-green-400">
+          <p class="text-gray-600 dark:text-gray-400 mb-4">{{ $t('videoCall.invitePrompt') }}</p>
+          <div class="bg-white dark:bg-gray-800 px-4 py-3 rounded-xl transition-colors border border-gray-200 dark:border-gray-700">
+            <p class="font-mono font-bold text-2xl tracking-wider text-green-600 dark:text-green-400">
               {{ roomInfo?.short_code }}
             </p>
           </div>
@@ -224,7 +224,7 @@
         <!-- Camera off indicator -->
         <div
           v-if="!webrtcStore.isVideoEnabled"
-          class="absolute inset-0 bg-gray-800 dark:bg-gray-700 flex items-center justify-center transition-colors"
+          class="absolute inset-0 bg-gray-200 dark:bg-gray-800 flex items-center justify-center transition-colors"
         >
           <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
