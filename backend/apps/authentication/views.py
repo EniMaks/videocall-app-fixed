@@ -42,7 +42,7 @@ def logout_view(request):
 
 def check_auth_view(request):
     is_authenticated = request.user.is_authenticated
-    return JsonResponse({'is_authenticated': is_authenticated})
+    return JsonResponse({'authenticated': is_authenticated})
 
 class GuestTokenGenerateView(APIView):
     """

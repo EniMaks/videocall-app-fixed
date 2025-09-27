@@ -274,7 +274,7 @@ def generate_guest_link(request, room_id):
         guest_token = str(token)
         base_url = request.build_absolute_uri('/').rstrip('/')
         # Construct the guest URL using the frontend path
-        guest_url = f"{base_url}/#/room/{room_id}?guest_token={guest_token}"
+        guest_url = f"{base_url}/#/call/{room_id}?guest_token={guest_token}"
 
         # Generate QR code for the guest URL
         qr = qrcode.QRCode(version=1, box_size=10, border=5)

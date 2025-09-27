@@ -95,11 +95,11 @@ const routes = [
       // Check if it looks like a UUID (room ID)
       const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
       if (uuidPattern.test(identifier)) {
-        return { name: 'VideoCall', params: { roomId: identifier } }
+        return { name: 'VideoCall', params: { roomId: identifier }, query: to.query }
       }
 
       // Otherwise assume it's a short code
-      return { name: 'JoinRoom', params: { shortCode: identifier } }
+      return { name: 'JoinRoom', params: { shortCode: identifier }, query: to.query }
     },
   },
   // {

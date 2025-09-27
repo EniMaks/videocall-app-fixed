@@ -15,6 +15,7 @@ export const useGlobalStore = defineStore('global', () => {
   const notifications = ref([])
   const isDarkMode = ref(false)
   const isOnline = ref(navigator.onLine)
+  const redirect = ref(null)
 
   // Computed
   const canUseApp = computed(() => isAuthenticated.value && isOnline.value)
@@ -80,6 +81,14 @@ export const useGlobalStore = defineStore('global', () => {
     } else {
       addNotification('notifications.connectionLost', 'error', 0)
     }
+  }
+
+  const setRedirect = (path) => {
+    redirect.value = path
+  }
+
+  const clearRedirect = () => {
+    redirect.value = null
   }
 
   const checkAuthentication = async () => {
@@ -176,6 +185,7 @@ export const useGlobalStore = defineStore('global', () => {
     notifications,
     isDarkMode,
     isOnline,
+    redirect,
 
     // Computed
     canUseApp,
@@ -188,6 +198,8 @@ export const useGlobalStore = defineStore('global', () => {
     clearNotifications,
     setDarkMode,
     setNetworkStatus,
+    setRedirect,
+    clearRedirect,
     checkAuthentication,
     authenticateGuest,
     login,
