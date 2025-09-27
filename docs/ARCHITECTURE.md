@@ -55,25 +55,27 @@ VideoCall is a real-time video calling application built with Django REST Framew
 ## Technology Stack
 
 ### Backend Stack
-- **Framework**: Django 5.2.5 + Django REST Framework
+- **Framework**: Django + Django REST Framework
 - **ASGI Server**: Daphne (for WebSocket support)
 - **WebSocket**: Django Channels with Redis
 - **Database**: PostgreSQL (Production) / SQLite (Development)
 - **Cache**: Redis (Session storage, Room data, Channel layers)
 - **Authentication**: Session-based + JWT for guests
 - **API**: RESTful API with OpenAPI documentation
+- *Все зависимости см. в `backend/requirements.txt`*
 
 ### Frontend Stack
-- **Framework**: Vue.js 3.3.8 (Composition API)
-- **Build Tool**: Vite 7.1.5
+- **Framework**: Vue.js (Composition API)
+- **Build Tool**: Vite
 - **Language**: TypeScript + JavaScript
-- **State Management**: Pinia 2.1.7
-- **Routing**: Vue Router 4.2.5
-- **HTTP Client**: Axios 1.6.2
-- **UI Framework**: Tailwind CSS 3.3.6
+- **State Management**: Pinia
+- **Routing**: Vue Router
+- **HTTP Client**: Axios
+- **UI Framework**: Tailwind CSS
 - **PWA**: Vite PWA Plugin (Service Worker support)
 - **WebRTC**: Native WebRTC APIs
-- **Internationalization**: Vue I18n 11.1.12
+- **Internationalization**: Vue I18n
+- *Все зависимости см. в `videocall-frontend/package.json`*
 
 ### Infrastructure & DevOps
 - **Containerization**: Docker + Docker Compose
@@ -241,7 +243,7 @@ Local → Vite Dev Server (Frontend) + Django Dev Server (Backend) → SQLite
 ├── POST /                 # Create new room
 ├── GET  /{room_id}/       # Get room details
 ├── POST /join/{code}/     # Join room by short code
-└── POST /{room_id}/generate-guest-link/ # Generate guest access link
+└── POST /{room_id}/generate-guest-link # Generate guest access link
 
 /api/
 ├── GET  /health/          # System health check
