@@ -58,13 +58,8 @@ onMounted(() => {
   // Check authentication on app load
   globalStore.checkAuthentication()
 
-  // Set up dark mode detection
-  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-  globalStore.setDarkMode(mediaQuery.matches)
-
-  mediaQuery.addEventListener('change', (e) => {
-    globalStore.setDarkMode(e.matches)
-  })
+  // Initialize theme with proper persistence
+  globalStore.initializeTheme()
 
   // Set up network status monitoring
   window.addEventListener('online', () => {

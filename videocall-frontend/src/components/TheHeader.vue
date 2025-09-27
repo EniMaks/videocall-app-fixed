@@ -149,6 +149,6 @@ const toggleMobileMenu = () => {
 }
 
 const toggleTheme = () => {
-  globalStore.setDarkMode(!isDarkMode.value)
+  globalStore.toggleTheme()
 }
 </script>

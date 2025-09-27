@@ -1,6 +1,7 @@
 // src/services/storage.js - Local and session storage utilities
 
 const GUEST_TOKEN_KEY = 'guest_token'
+const THEME_PREFERENCE_KEY = 'theme_preference'
 
 export const storage = {
   /**
@@ -82,6 +83,38 @@ export const storage = {
       return true
     } catch (error) {
       console.warn('Failed to clear guest token from sessionStorage', error)
+      return false
+    }
+  },
+
+  // --- Theme Preferences --- (uses localStorage)
+
+  getThemePreference() {
+    try {
+      const preference = localStorage.getItem(THEME_PREFERENCE_KEY)
+      return preference ? JSON.parse(preference) : null
+    } catch (error) {
+      console.warn('Failed to get theme preference from localStorage', error)
+      return null
+    }
+  },
+
+  setThemePreference(preference) {
+    try {
+      localStorage.setItem(THEME_PREFERENCE_KEY, JSON.stringify(preference))
+      return true
+    } catch (error) {
+      console.warn('Failed to set theme preference in localStorage', error)
+      return false
+    }
+  },
+
+  clearThemePreference() {
+    try {
+      localStorage.removeItem(THEME_PREFERENCE_KEY)
+      return true
+    } catch (error) {
+      console.warn('Failed to clear theme preference from localStorage', error)
       return false
     }
   },

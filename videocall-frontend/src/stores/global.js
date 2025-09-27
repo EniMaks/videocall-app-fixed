@@ -69,9 +69,18 @@ export const useGlobalStore = defineStore('global', () => {
     notifications.value = []
   }
 
-  const setDarkMode = (dark) => {
+  const setDarkMode = (dark, userTriggered = false) => {
     isDarkMode.value = dark
     document.documentElement.classList.toggle('dark', dark)
+    
+    // Save to localStorage if user manually triggered the change
+    if (userTriggered) {
+      storage.setThemePreference({
+        isDarkMode: dark,
+        userOverride: true,
+        lastUpdated: Date.now()
+      })
+    }
   }
 
   const setNetworkStatus = (online) => {
@@ -89,6 +98,38 @@ export const useGlobalStore = defineStore('global', () => {
 
   const clearRedirect = () => {
     redirect.value = null
+  }
+
+  const initializeTheme = () => {
+    // Check for saved user preference first
+    const savedTheme = storage.getThemePreference()
+    
+    if (savedTheme && savedTheme.userOverride) {
+      // User has manually set a preference, use it
+      console.log('[Store] Using saved user theme preference:', savedTheme.isDarkMode)
+      setDarkMode(savedTheme.isDarkMode, false)
+      return
+    }
+    
+    // No user preference, use system preference
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    console.log('[Store] Using system theme preference:', mediaQuery.matches)
+    setDarkMode(mediaQuery.matches, false)
+    
+    // Listen for system preference changes only if user hasn't overridden
+    mediaQuery.addEventListener('change', (e) => {
+      const currentSavedTheme = storage.getThemePreference()
+      if (!currentSavedTheme || !currentSavedTheme.userOverride) {
+        console.log('[Store] System theme changed:', e.matches)
+        setDarkMode(e.matches, false)
+      }
+    })
+  }
+
+  const toggleTheme = () => {
+    const newMode = !isDarkMode.value
+    console.log('[Store] User toggled theme to:', newMode)
+    setDarkMode(newMode, true)
   }
 
   const checkAuthentication = async () => {
@@ -197,6 +238,8 @@ export const useGlobalStore = defineStore('global', () => {
     removeNotification,
     clearNotifications,
     setDarkMode,
+    initializeTheme,
+    toggleTheme,
     setNetworkStatus,
     setRedirect,
     clearRedirect,
