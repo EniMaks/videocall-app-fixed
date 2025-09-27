@@ -71,7 +71,15 @@ export const useGlobalStore = defineStore('global', () => {
 
   const setDarkMode = (dark, userTriggered = false) => {
     isDarkMode.value = dark
-    document.documentElement.classList.toggle('dark', dark)
+    
+    // Apply theme class to both html and body elements for better coverage
+    if (dark) {
+      document.documentElement.classList.add('dark')
+      document.body.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+      document.body.classList.remove('dark')
+    }
     
     // Save to localStorage if user manually triggered the change
     if (userTriggered) {
@@ -123,6 +131,11 @@ export const useGlobalStore = defineStore('global', () => {
         console.log('[Store] System theme changed:', e.matches)
         setDarkMode(e.matches, false)
       }
+    })
+    
+    // Force re-render to ensure theme is applied
+    requestAnimationFrame(() => {
+      document.documentElement.style.colorScheme = isDarkMode.value ? 'dark' : 'light'
     })
   }
 
