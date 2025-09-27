@@ -238,14 +238,14 @@ Local → Vite Dev Server (Frontend) + Django Dev Server (Backend) → SQLite
 └── POST /guest/validate/  # Validate guest JWT
 
 /api/rooms/
-├── POST /create/          # Create new room
-├── GET  /{id}/           # Get room details
+├── POST /                 # Create new room
+├── GET  /{room_id}/       # Get room details
 ├── POST /join/{code}/     # Join room by short code
-└── POST /guest-link/      # Generate guest access link
+└── POST /{room_id}/generate-guest-link/ # Generate guest access link
 
 /api/
 ├── GET  /health/          # System health check
-└── GET  /status/          # System status
+└── GET  /metrics/         # System metrics (admin only)
 ```
 
 ### WebSocket Endpoints
