@@ -2,19 +2,14 @@
 <!-- src/components/VideoCall.vue - Complete main video call component -->
 <template>
   <div ref="callContainer" class="viewport-fixed bg-gray-50 dark:bg-black flex flex-col transition-colors">
-    <!-- Fullscreen Control -->
-    <FullscreenControl 
-      ref="fullscreenControl" 
-      :auto-mode="shouldAutoFullscreen"
-      target="body"
-      @fullscreen-change="onFullscreenChange" 
-    />
     <!-- Header -->
     <header
       :class="[
-        'bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-4 flex items-center justify-between z-10 safe-area-inset border-b border-gray-200 dark:border-gray-700 transition-colors',
+        'text-gray-900 dark:text-white p-4 flex items-center justify-between z-20 safe-area-inset transition-all duration-300',
         { 'mobile-header': isMobileView },
-        { 'hidden': isFullscreenMode && shouldHideUI }
+        isFullscreenMode ? 'absolute top-0 left-0 right-0 bg-black bg-opacity-50 backdrop-blur-sm border-b border-gray-500 border-opacity-30' : 'bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700',
+        { 'opacity-0 pointer-events-none': isFullscreenMode && shouldHideUI },
+        { 'opacity-100 pointer-events-auto': !isFullscreenMode || !shouldHideUI }
       ]"
     >
       <div class="flex items-center space-x-4">
@@ -43,12 +38,6 @@
           </svg>
           <span>{{ participantCount }}</span>
         </div>
-
-        <!-- Fullscreen button -->
-        <FullscreenControl 
-          v-if="!shouldAutoFullscreen" 
-          class="fullscreen-control-inline"
-        />
 
         <!-- Menu button -->
         <button
@@ -120,9 +109,10 @@
 
     <!-- Video Container -->
     <div :class="[
-      'flex-1 relative overflow-hidden bg-gray-100 dark:bg-black transition-colors',
-      { 'mobile-video-area': isMobileView }
-    ]">
+      'relative overflow-hidden bg-gray-100 dark:bg-black transition-colors',
+      isFullscreenMode ? 'fixed inset-0 z-10' : 'flex-1',
+      { 'mobile-video-area': isMobileView && !isFullscreenMode }
+    ]" @click="handleVideoAreaClick">
       <!-- Remote Video (main) -->
       <div v-if="webrtcStore.hasRemoteVideo" class="absolute inset-0">
         <video
@@ -192,36 +182,50 @@
       <!-- Local Video (picture-in-picture) -->
       <div
         v-if="webrtcStore.hasLocalVideo"
+        ref="localVideoContainer"
         :class="[
-          'absolute z-20 rounded-xl overflow-hidden shadow-2xl transition-all duration-300 cursor-pointer border-2',
-          localVideoSize === 'small'
-            ? 'w-32 h-24 bottom-36 right-4'
-            : localVideoSize === 'large'
-              ? 'w-64 h-48 bottom-36 right-4'
-              : 'w-48 h-36 bottom-36 right-4',
+          'absolute z-30 rounded-xl overflow-hidden shadow-2xl transition-all duration-200 cursor-move border-2 select-none',
           webrtcStore.isVideoEnabled ? 'border-green-400' : 'border-gray-600',
         ]"
-        @click="toggleLocalVideoSize"
+        :style="{
+          width: localVideoSize.width + 'px',
+          height: localVideoSize.height + 'px',
+          left: localVideoPosition.x + 'px',
+          top: localVideoPosition.y + 'px'
+        }"
+        @mousedown="startDragging"
+        @touchstart="startDragging"
       >
         <video
           ref="localVideoRef"
           autoplay
           muted
           playsinline
-          class="w-full h-full object-cover"
+          class="w-full h-full object-cover pointer-events-none"
           :class="{ mirror: shouldMirrorLocal }"
         ></video>
 
+        <!-- Resize handle -->
+        <div
+          class="absolute bottom-0 right-0 w-4 h-4 cursor-nw-resize bg-green-500 opacity-70 hover:opacity-100 transition-opacity"
+          @mousedown.stop="startResizing"
+          @touchstart.stop="startResizing"
+        >
+          <svg class="w-3 h-3 text-white p-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M7 16l4-4m0 0l4-4m-4 4l-4-4m4 4l4 4"/>
+          </svg>
+        </div>
+
         <!-- Local video controls overlay -->
         <div
-          class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-opacity flex items-center justify-center opacity-0 hover:opacity-100"
+          class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-opacity flex items-center justify-center opacity-0 hover:opacity-100 pointer-events-none"
         >
           <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
-              d="M4 8V4m0 0h4M4 4l5 5m11-5v4m0-4h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"
+              d="M7 16l3-3m0 0l3-3m-3 3l-3-3m3 3l3 3M4 4h16v16H4z"
             ></path>
           </svg>
         </div>
@@ -280,9 +284,11 @@
 
     <!-- Controls -->
     <div :class="[
-      'bg-gradient-to-t from-gray-200 to-gray-100 dark:from-gray-900 dark:to-gray-800 py-4 safe-area-inset transition-colors border-t border-gray-300 dark:border-gray-700',
+      'py-4 safe-area-inset transition-all duration-300 z-20',
       { 'mobile-controls': isMobileView },
-      { 'hidden': isFullscreenMode && shouldHideUI }
+      isFullscreenMode ? 'absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 backdrop-blur-sm border-t border-gray-500 border-opacity-30' : 'bg-gradient-to-t from-gray-200 to-gray-100 dark:from-gray-900 dark:to-gray-800 border-t border-gray-300 dark:border-gray-700',
+      { 'opacity-0 pointer-events-none': isFullscreenMode && shouldHideUI },
+      { 'opacity-100 pointer-events-auto': !isFullscreenMode || !shouldHideUI }
     ]">
       <div class="max-w-md mx-auto flex items-center justify-center space-x-6">
         <!-- Toggle Audio -->
@@ -364,6 +370,23 @@
               stroke-width="2"
               d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
             ></path>
+          </svg>
+        </button>
+        
+        <!-- Fullscreen Toggle -->
+        <button
+          :class="[
+            'control-button',
+            isFullscreenMode ? 'control-button-active' : 'control-button-inactive'
+          ]"
+          :title="isFullscreenMode ? $t('fullscreen.exit') : $t('fullscreen.enter')"
+          @click="toggleFullscreenMode"
+        >
+          <svg v-if="!isFullscreenMode" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"/>
+          </svg>
+          <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9V4.5M9 9H4.5M9 9L3.5 3.5M15 9h4.5M15 9V4.5M15 9l5.5-5.5M9 15v4.5M9 15H4.5M9 15l-5.5 5.5M15 15h4.5M15 15v4.5m0 0l5.5 5.5"/>
           </svg>
         </button>
         
@@ -609,13 +632,12 @@ const globalStore = useGlobalStore()
 const callContainer = ref(null)
 const localVideoRef = ref(null)
 const remoteVideoRef = ref(null)
-const fullscreenControl = ref(null)
+const localVideoContainer = ref(null)
 
 // Reactive state
 const roomInfo = ref(null)
 const callStartTime = ref(null)
 const callDuration = ref(0)
-const localVideoSize = ref('medium')
 const showShareModal = ref(false)
 const showStats = ref(false)
 const showMenu = ref(false)
@@ -633,6 +655,14 @@ const isFullscreenMode = ref(false)
 const shouldHideUI = ref(false)
 const shouldAutoFullscreen = ref(true) // Auto fullscreen for video calls
 const isMobileView = ref(false)
+
+// Local video dragging and resizing
+const localVideoPosition = ref({ x: 20, y: 20 })
+const localVideoSize = ref({ width: 200, height: 150 })
+const isDragging = ref(false)
+const isResizing = ref(false)
+const dragStart = ref({ x: 0, y: 0 })
+const resizeStart = ref({ x: 0, y: 0, width: 0, height: 0 })
 
 // Connection monitoring
 const connectionStats = ref(null)
@@ -792,6 +822,162 @@ const onFullscreenChange = (isFullscreen) => {
   } else {
     shouldHideUI.value = false
   }
+  
+  // Adjust local video position when entering/exiting fullscreen
+  if (isFullscreen) {
+    // Position local video in top-right corner for fullscreen
+    localVideoPosition.value = { x: window.innerWidth - localVideoSize.value.width - 20, y: 80 }
+  } else {
+    // Reset to default position
+    localVideoPosition.value = { x: 20, y: 20 }
+  }
+}
+
+const toggleFullscreenMode = async () => {
+  try {
+    if (!isFullscreenMode.value) {
+      // Enter fullscreen
+      const element = document.body
+      if (element.requestFullscreen) {
+        await element.requestFullscreen()
+      } else if (element.webkitRequestFullscreen) {
+        await element.webkitRequestFullscreen()
+      } else if (element.mozRequestFullScreen) {
+        await element.mozRequestFullScreen()
+      } else if (element.msRequestFullscreen) {
+        await element.msRequestFullscreen()
+      }
+    } else {
+      // Exit fullscreen
+      if (document.exitFullscreen) {
+        await document.exitFullscreen()
+      } else if (document.webkitExitFullscreen) {
+        await document.webkitExitFullscreen()
+      } else if (document.mozCancelFullScreen) {
+        await document.mozCancelFullScreen()
+      } else if (document.msExitFullscreen) {
+        await document.msExitFullscreen()
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to toggle fullscreen:', error)
+  }
+}
+
+// Fullscreen change listener
+const handleFullscreenChange = () => {
+  const isCurrentlyFullscreen = !!(
+    document.fullscreenElement ||
+    document.webkitFullscreenElement ||
+    document.mozFullScreenElement ||
+    document.msFullscreenElement
+  )
+  
+  onFullscreenChange(isCurrentlyFullscreen)
+}
+
+// Local video dragging functionality
+const startDragging = (event) => {
+  if (isResizing.value) return
+  
+  isDragging.value = true
+  const clientX = event.touches ? event.touches[0].clientX : event.clientX
+  const clientY = event.touches ? event.touches[0].clientY : event.clientY
+  
+  dragStart.value = {
+    x: clientX - localVideoPosition.value.x,
+    y: clientY - localVideoPosition.value.y
+  }
+  
+  document.addEventListener('mousemove', handleDragging)
+  document.addEventListener('mouseup', stopDragging)
+  document.addEventListener('touchmove', handleDragging)
+  document.addEventListener('touchend', stopDragging)
+  
+  event.preventDefault()
+}
+
+const handleDragging = (event) => {
+  if (!isDragging.value) return
+  
+  const clientX = event.touches ? event.touches[0].clientX : event.clientX
+  const clientY = event.touches ? event.touches[0].clientY : event.clientY
+  
+  const newX = Math.max(0, Math.min(window.innerWidth - localVideoSize.value.width, clientX - dragStart.value.x))
+  const newY = Math.max(0, Math.min(window.innerHeight - localVideoSize.value.height, clientY - dragStart.value.y))
+  
+  localVideoPosition.value = { x: newX, y: newY }
+  
+  event.preventDefault()
+}
+
+const stopDragging = () => {
+  isDragging.value = false
+  
+  document.removeEventListener('mousemove', handleDragging)
+  document.removeEventListener('mouseup', stopDragging)
+  document.removeEventListener('touchmove', handleDragging)
+  document.removeEventListener('touchend', stopDragging)
+}
+
+// Local video resizing functionality
+const startResizing = (event) => {
+  isResizing.value = true
+  const clientX = event.touches ? event.touches[0].clientX : event.clientX
+  const clientY = event.touches ? event.touches[0].clientY : event.clientY
+  
+  resizeStart.value = {
+    x: clientX,
+    y: clientY,
+    width: localVideoSize.value.width,
+    height: localVideoSize.value.height
+  }
+  
+  document.addEventListener('mousemove', handleResizing)
+  document.addEventListener('mouseup', stopResizing)
+  document.addEventListener('touchmove', handleResizing)
+  document.addEventListener('touchend', stopResizing)
+  
+  event.preventDefault()
+  event.stopPropagation()
+}
+
+const handleResizing = (event) => {
+  if (!isResizing.value) return
+  
+  const clientX = event.touches ? event.touches[0].clientX : event.clientX
+  const clientY = event.touches ? event.touches[0].clientY : event.clientY
+  
+  const deltaX = clientX - resizeStart.value.x
+  const deltaY = clientY - resizeStart.value.y
+  
+  // Maintain aspect ratio (4:3)
+  const aspectRatio = 4 / 3
+  let newWidth = Math.max(120, Math.min(400, resizeStart.value.width + deltaX))
+  let newHeight = newWidth / aspectRatio
+  
+  // Ensure video doesn't go out of bounds
+  if (localVideoPosition.value.x + newWidth > window.innerWidth) {
+    newWidth = window.innerWidth - localVideoPosition.value.x
+    newHeight = newWidth / aspectRatio
+  }
+  if (localVideoPosition.value.y + newHeight > window.innerHeight) {
+    newHeight = window.innerHeight - localVideoPosition.value.y
+    newWidth = newHeight * aspectRatio
+  }
+  
+  localVideoSize.value = { width: newWidth, height: newHeight }
+  
+  event.preventDefault()
+}
+
+const stopResizing = () => {
+  isResizing.value = false
+  
+  document.removeEventListener('mousemove', handleResizing)
+  document.removeEventListener('mouseup', stopResizing)
+  document.removeEventListener('touchmove', handleResizing)
+  document.removeEventListener('touchend', stopResizing)
 }
 
 const setContainerHeight = () => {
@@ -913,12 +1099,23 @@ const handleEndCall = async () => {
   }
 }
 
-const toggleLocalVideoSize = () => {
-  const sizes = ['small', 'medium', 'large']
-  const currentIndex = sizes.indexOf(localVideoSize.value)
-  const nextIndex = (currentIndex + 1) % sizes.length
-  localVideoSize.value = sizes[nextIndex]
+// Handle clicking on video area to toggle UI in fullscreen
+const handleVideoAreaClick = () => {
+  if (isFullscreenMode.value) {
+    shouldHideUI.value = !shouldHideUI.value
+    
+    // Auto-hide UI again after 5 seconds if shown
+    if (!shouldHideUI.value) {
+      setTimeout(() => {
+        if (isFullscreenMode.value) {
+          shouldHideUI.value = true
+        }
+      }, 5000)
+    }
+  }
 }
+
+// ... existing code ...
 
 const shareRoom = () => {
   showShareModal.value = true
@@ -1028,14 +1225,36 @@ onMounted(() => {
   window.addEventListener('resize', () => {
     setContainerHeight()
     detectMobileView()
+    // Adjust local video position on resize
+    if (isFullscreenMode.value) {
+      localVideoPosition.value = { 
+        x: Math.min(localVideoPosition.value.x, window.innerWidth - localVideoSize.value.width),
+        y: Math.min(localVideoPosition.value.y, window.innerHeight - localVideoSize.value.height)
+      }
+    }
+  })
+  
+  // Add fullscreen event listeners
+  document.addEventListener('fullscreenchange', handleFullscreenChange)
+  document.addEventListener('webkitfullscreenchange', handleFullscreenChange)
+  document.addEventListener('mozfullscreenchange', handleFullscreenChange)
+  document.addEventListener('MSFullscreenChange', handleFullscreenChange)
+  
+  // Set initial local video position
+  nextTick(() => {
+    if (isMobileView.value) {
+      localVideoPosition.value = { x: window.innerWidth - 220, y: 80 }
+      localVideoSize.value = { width: 160, height: 120 }
+    } else {
+      localVideoPosition.value = { x: window.innerWidth - 320, y: 80 }
+      localVideoSize.value = { width: 240, height: 180 }
+    }
   })
   
   // Enable auto fullscreen for mobile devices
   if (isMobileView.value && shouldAutoFullscreen.value) {
     setTimeout(() => {
-      if (fullscreenControl.value) {
-        fullscreenControl.value.enableAutoMode()
-      }
+      toggleFullscreenMode()
     }, 2000) // Delay to allow user to get familiar with the interface
   }
 })
@@ -1045,6 +1264,16 @@ onUnmounted(async () => {
     setContainerHeight()
     detectMobileView()
   })
+  
+  // Remove fullscreen event listeners
+  document.removeEventListener('fullscreenchange', handleFullscreenChange)
+  document.removeEventListener('webkitfullscreenchange', handleFullscreenChange)
+  document.removeEventListener('mozfullscreenchange', handleFullscreenChange)
+  document.removeEventListener('MSFullscreenChange', handleFullscreenChange)
+  
+  // Cleanup dragging and resizing event listeners
+  stopDragging()
+  stopResizing()
 
   // Cleanup intervals
   if (durationInterval) {
@@ -1154,5 +1383,37 @@ onUnmounted(async () => {
   .mobile-controls {
     padding: 12px 16px;
   }
+}
+
+/* Draggable local video styles */
+.cursor-move {
+  cursor: move;
+}
+
+.cursor-nw-resize {
+  cursor: nw-resize;
+}
+
+/* Prevent text selection during drag/resize */
+.select-none {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Fullscreen transparent overlays */
+.backdrop-blur-sm {
+  backdrop-filter: blur(8px);
+}
+
+/* Smooth transitions for fullscreen UI */
+.transition-all {
+  transition: all 0.3s ease;
+}
+
+/* Improved z-index stacking */
+.z-30 {
+  z-index: 30;
 }
 </style>
