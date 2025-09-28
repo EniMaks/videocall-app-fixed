@@ -13,7 +13,7 @@
       :class="[
         'bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-4 flex items-center justify-between z-10 safe-area-inset border-b border-gray-200 dark:border-gray-700 transition-colors',
         { 'mobile-header': isMobileView },
-        { 'fullscreen-overlay': isFullscreenMode }
+        { 'hidden': isFullscreenMode && shouldHideUI }
       ]"
     >
       <div class="flex items-center space-x-4">
@@ -339,7 +339,7 @@
         >
           <svg
             v-if="webrtcStore.isVideoEnabled"
-            class="w-5 h-5"
+            class="w-8 h-8"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -351,7 +351,7 @@
               d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
             ></path>
           </svg>
-          <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg v-else class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -384,7 +384,7 @@
           @click="showSettingsModal = true"
         >
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
         </button>
         
         <!-- End Call -->
@@ -393,7 +393,7 @@
           :title="$t('videoCall.endCall')"
           @click="handleEndCall"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -641,7 +641,7 @@ const connectingSubMessage = ref(t('loading.preparingCall'))
 
 // Fullscreen and UI state
 const isFullscreenMode = ref(false)
-const shouldHideUI = ref(false)
+const shouldHideUI = ref(false) // Всегда false - UI не скрывается
 const shouldAutoFullscreen = ref(true)
 const isMobileView = ref(false)
 
@@ -809,10 +809,10 @@ const detectMobileView = () => {
 
 const onFullscreenChange = (isFullscreen) => {
   isFullscreenMode.value = isFullscreen
-  // Keep UI always visible in fullscreen mode
+  // Всегда оставляем UI видимым в полноэкранном режиме
   shouldHideUI.value = false
   
-  // Constrain video position when entering fullscreen
+  // Ограничиваем позицию видео при входе в полноэкранный режим
   if (isFullscreen) {
     setTimeout(() => {
       constrainPosition()
@@ -989,7 +989,7 @@ const startStatsMonitoring = () => {
 
 // Methods for draggable video
 const startDragging = (event) => {
-  // Prevent dragging when resizing
+  // Предотвращаем перетаскивание при изменении размера
   if (event.target.closest('.resize-handle')) return
   
   isDragging.value = true
@@ -1011,11 +1011,11 @@ const handleDragging = (event) => {
   
   if (!clientX || !clientY) return
   
-  // Calculate new position
+  // Вычисляем новую позицию
   let newX = clientX - dragOffset.value.x
   let newY = clientY - dragOffset.value.y
   
-  // Apply boundary constraints
+  // Применяем ограничения границ
   const bounds = calculateBounds()
   newX = Math.max(bounds.minX, Math.min(bounds.maxX, newX))
   newY = Math.max(bounds.minY, Math.min(bounds.maxY, newY))
@@ -1045,7 +1045,7 @@ const handleResizing = (event) => {
   
   const rect = localVideoContainer.value.getBoundingClientRect()
   const newWidth = Math.max(120, clientX - rect.left + 10)
-  const newHeight = (newWidth * 3) / 4 // Maintain 4:3 aspect ratio
+  const newHeight = (newWidth * 3) / 4 // Сохраняем соотношение 4:3
   
   localVideoSize.value = { width: newWidth, height: newHeight }
   event.preventDefault()
@@ -1133,26 +1133,26 @@ onMounted(() => {
   window.addEventListener('resize', () => {
     setContainerHeight()
     detectMobileView()
-    constrainPosition() // Recalculate boundaries on resize
+    constrainPosition() // Пересчитываем границы при изменении размера
   })
   
-  // Add mouse/touch event listeners for dragging
+  // Добавляем обработчики событий для перетаскивания
   window.addEventListener('mousemove', handleDragging)
   window.addEventListener('touchmove', handleDragging, { passive: false })
   window.addEventListener('mouseup', stopDragging)
   window.addEventListener('touchend', stopDragging)
   
-  // Add resize event listeners
+  // Добавляем обработчики событий для изменения размера
   window.addEventListener('mousemove', handleResizing)
   window.addEventListener('touchmove', handleResizing, { passive: false })
   
-  // Enable auto fullscreen for mobile devices
+  // Включаем автоматический полноэкранный режим для мобильных устройств
   if (isMobileView.value && shouldAutoFullscreen.value) {
     setTimeout(() => {
       if (fullscreenControl.value) {
         fullscreenControl.value.enableAutoMode()
       }
-    }, 2000) // Delay to allow user to get familiar with the interface
+    }, 2000) // Задержка, чтобы пользователь успел ознакомиться с интерфейсом
   }
 })
 
@@ -1162,7 +1162,7 @@ onUnmounted(async () => {
     detectMobileView()
   })
 
-  // Cleanup intervals
+  // Очищаем интервалы
   if (durationInterval) {
     clearInterval(durationInterval)
   }
@@ -1170,7 +1170,7 @@ onUnmounted(async () => {
     clearInterval(statsMonitor.value)
   }
 
-  // End call and leave room
+  // Завершаем вызов и покидаем комнату
   try {
     await webrtcStore.endCall()
 
@@ -1181,7 +1181,7 @@ onUnmounted(async () => {
     console.error('Cleanup error:', error)
   }
   
-  // Remove event listeners
+  // Удаляем обработчики событий
   window.removeEventListener('mousemove', handleDragging)
   window.removeEventListener('touchmove', handleDragging)
   window.removeEventListener('mouseup', stopDragging)
