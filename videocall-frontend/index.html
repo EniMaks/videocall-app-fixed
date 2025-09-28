@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no, maximum-scale=1.0" />
 
         <!-- Primary Meta Tags -->
         <title>Video Call App</title>
@@ -21,8 +21,14 @@
         <!-- PWA Meta Tags -->
         <meta name="theme-color" content="#22c55e" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="VideoCall" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="application-name" content="VideoCall" />
+        
+        <!-- Prevent zoom and enable fullscreen behavior -->
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="msapplication-tap-highlight" content="no" />
 
         <!-- Open Graph / Facebook -->
         <meta property="og:type" content="website" />
@@ -38,7 +44,7 @@
         <!-- Основные стили приложения -->
         <style>
             /* Базовые стили до загрузки приложения */
-            body {
+            html, body {
                 font-family:
                     system-ui,
                     -apple-system,
@@ -49,6 +55,15 @@
                 margin: 0;
                 padding: 0;
                 background-color: #f9fafb;
+                height: 100vh;
+                height: 100dvh;
+                overflow: hidden;
+                position: fixed;
+                width: 100%;
+                -webkit-overflow-scrolling: touch;
+                -webkit-user-select: none;
+                -webkit-touch-callout: none;
+                -webkit-tap-highlight-color: transparent;
             }
 
             .dark body {

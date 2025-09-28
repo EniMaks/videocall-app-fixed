@@ -102,3 +102,102 @@ body.dark {
     @apply w-5 h-5;
   }
 }
+
+/* Viewport fixed height styles for mobile-like experience */
+.viewport-fixed {
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height for mobile browsers */
+  overflow: hidden;
+}
+
+.safe-area-inset {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Fullscreen specific styles */
+.fullscreen-mode {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+}
+
+/* Hide scrollbars when in viewport-fixed mode */
+.viewport-fixed::-webkit-scrollbar {
+  display: none;
+}
+
+.viewport-fixed {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Prevent mobile behaviors that interfere with app */
+body, html {
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-text-size-adjust: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+/* Allow text selection where needed */
+input, textarea, [contenteditable] {
+  -webkit-user-select: auto;
+  user-select: auto;
+}
+
+/* Prevent zoom on input focus */
+input, select, textarea {
+  font-size: 16px !important;
+  transform: translateZ(0);
+  -webkit-appearance: none;
+  -webkit-border-radius: 0;
+}
+
+/* Enhanced mobile view */
+@media (max-width: 768px) {
+  /* Ensure header doesn't take too much space on mobile */
+  .mobile-header {
+    min-height: 60px;
+    max-height: 80px;
+  }
+  
+  /* Adjust video call controls for mobile */
+  .mobile-controls {
+    padding: 12px 16px;
+    min-height: 80px;
+  }
+  
+  /* Make video area use remaining space */
+  .mobile-video-area {
+    height: calc(100vh - 60px - 80px); /* viewport - header - controls */
+    height: calc(100dvh - 60px - 80px);
+  }
+  
+  /* Ensure router-view takes full height on mobile */
+  .mobile-router-view {
+    height: calc(100vh - 60px); /* viewport minus header */
+    height: calc(100dvh - 60px);
+    overflow: hidden;
+  }
+  
+  /* Compact buttons for mobile */
+  .btn-primary, .btn-secondary {
+    @apply py-2 px-3 text-sm;
+  }
+  
+  /* Make modals mobile-friendly */
+  .mobile-modal {
+    margin: 16px;
+    max-height: calc(100vh - 32px);
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+  }
+}

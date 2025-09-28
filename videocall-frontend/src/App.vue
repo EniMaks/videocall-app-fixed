@@ -1,7 +1,7 @@
 // src/App.vue - Main application component
 <template>
-  <div id="app" class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-    <TheHeader />
+  <div id="app" class="viewport-fixed bg-gray-50 dark:bg-gray-900 transition-colors">
+    <TheHeader v-if="!isVideoCallPage" />
     <router-view />
 
     <!-- Global loading indicator -->
@@ -48,11 +48,18 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, computed } from 'vue'
 import { useGlobalStore } from './stores/global'
+import { useRoute } from 'vue-router'
 import TheHeader from './components/TheHeader.vue' // Import the component
 
 const globalStore = useGlobalStore()
+const route = useRoute()
+
+// Hide header on video call page for cleaner mobile experience
+const isVideoCallPage = computed(() => {
+  return route.path.includes('/call/')
+})
 
 onMounted(() => {
   // Check authentication on app load

@@ -181,5 +181,12 @@
       "low": "Low",
       "unknown": "Unknown"
     }
+  },
+  "fullscreen": {
+    "enter": "Enter fullscreen",
+    "exit": "Exit fullscreen",
+    "autoMode": "Automatic fullscreen mode",
+    "manualControl": "Tap anywhere to show/hide browser controls",
+    "hide": "Hide"
   }
 }

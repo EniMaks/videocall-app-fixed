@@ -1,10 +1,21 @@
 <!-- src/components/VideoCall.vue - Complete main video call component -->
 <!-- src/components/VideoCall.vue - Complete main video call component -->
 <template>
-  <div ref="callContainer" class="h-screen bg-gray-50 dark:bg-black flex flex-col transition-colors">
+  <div ref="callContainer" class="viewport-fixed bg-gray-50 dark:bg-black flex flex-col transition-colors">
+    <!-- Fullscreen Control -->
+    <FullscreenControl 
+      ref="fullscreenControl" 
+      :auto-mode="shouldAutoFullscreen"
+      target="body"
+      @fullscreen-change="onFullscreenChange" 
+    />
     <!-- Header -->
     <header
-      class="bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-4 flex items-center justify-between z-10 safe-area-inset border-b border-gray-200 dark:border-gray-700 transition-colors"
+      :class="[
+        'bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-4 flex items-center justify-between z-10 safe-area-inset border-b border-gray-200 dark:border-gray-700 transition-colors',
+        { 'mobile-header': isMobileView },
+        { 'hidden': isFullscreenMode && shouldHideUI }
+      ]"
     >
       <div class="flex items-center space-x-4">
         <h1 class="text-lg font-medium">{{ $t('videoCall.roomTitle', { code: roomInfo?.short_code }) }}</h1>
@@ -32,6 +43,12 @@
           </svg>
           <span>{{ participantCount }}</span>
         </div>
+
+        <!-- Fullscreen button -->
+        <FullscreenControl 
+          v-if="!shouldAutoFullscreen" 
+          class="fullscreen-control-inline"
+        />
 
         <!-- Menu button -->
         <button
@@ -102,7 +119,10 @@
     </header>
 
     <!-- Video Container -->
-    <div class="flex-1 relative overflow-hidden bg-gray-100 dark:bg-black transition-colors">
+    <div :class="[
+      'flex-1 relative overflow-hidden bg-gray-100 dark:bg-black transition-colors',
+      { 'mobile-video-area': isMobileView }
+    ]">
       <!-- Remote Video (main) -->
       <div v-if="webrtcStore.hasRemoteVideo" class="absolute inset-0">
         <video
@@ -259,7 +279,11 @@
     </div>
 
     <!-- Controls -->
-    <div class="bg-gradient-to-t from-gray-200 to-gray-100 dark:from-gray-900 dark:to-gray-800 py-4 safe-area-inset transition-colors border-t border-gray-300 dark:border-gray-700">
+    <div :class="[
+      'bg-gradient-to-t from-gray-200 to-gray-100 dark:from-gray-900 dark:to-gray-800 py-4 safe-area-inset transition-colors border-t border-gray-300 dark:border-gray-700',
+      { 'mobile-controls': isMobileView },
+      { 'hidden': isFullscreenMode && shouldHideUI }
+    ]">
       <div class="max-w-md mx-auto flex items-center justify-center space-x-6">
         <!-- Toggle Audio -->
         <button
@@ -570,6 +594,7 @@ import { useGlobalStore } from '../stores/global'
 import { utils } from '../services/utils'
 import { webrtcService } from '../services/webrtc'
 import SettingsPanel from './SettingsPanel.vue'; // <-- Import SettingsPanel
+import FullscreenControl from './FullscreenControl.vue'
 
 const showSettingsModal = ref(false); // <-- Add this ref
 
@@ -584,6 +609,7 @@ const globalStore = useGlobalStore()
 const callContainer = ref(null)
 const localVideoRef = ref(null)
 const remoteVideoRef = ref(null)
+const fullscreenControl = ref(null)
 
 // Reactive state
 const roomInfo = ref(null)
@@ -601,6 +627,12 @@ const showConnectionQuality = ref(true)
 const isConnecting = ref(false)
 const connectingMessage = ref(t('loading.connectingToRoom'))
 const connectingSubMessage = ref(t('loading.preparingCall'))
+
+// Fullscreen and UI state
+const isFullscreenMode = ref(false)
+const shouldHideUI = ref(false)
+const shouldAutoFullscreen = ref(true) // Auto fullscreen for video calls
+const isMobileView = ref(false)
 
 // Connection monitoring
 const connectionStats = ref(null)
@@ -746,6 +778,22 @@ const remoteVideoInfo = computed(() => {
 })
 
 // Methods
+const detectMobileView = () => {
+  isMobileView.value = window.innerWidth <= 768 || /Mobi|Android/i.test(navigator.userAgent)
+}
+
+const onFullscreenChange = (isFullscreen) => {
+  isFullscreenMode.value = isFullscreen
+  // Auto-hide UI in fullscreen mode on mobile
+  if (isFullscreen && isMobileView.value) {
+    setTimeout(() => {
+      shouldHideUI.value = true
+    }, 3000) // Hide UI after 3 seconds
+  } else {
+    shouldHideUI.value = false
+  }
+}
+
 const setContainerHeight = () => {
   if (callContainer.value) {
     callContainer.value.style.height = `${window.innerHeight*0.8}px`;
@@ -972,15 +1020,31 @@ const vClickOutside = {
 // Lifecycle
 onMounted(() => {
   console.log('VideoCall component mounted');
+  detectMobileView()
   initializeCall()
   durationInterval = setInterval(updateCallDuration, 1000)
 
   setContainerHeight();
-  window.addEventListener('resize', setContainerHeight);
+  window.addEventListener('resize', () => {
+    setContainerHeight()
+    detectMobileView()
+  })
+  
+  // Enable auto fullscreen for mobile devices
+  if (isMobileView.value && shouldAutoFullscreen.value) {
+    setTimeout(() => {
+      if (fullscreenControl.value) {
+        fullscreenControl.value.enableAutoMode()
+      }
+    }, 2000) // Delay to allow user to get familiar with the interface
+  }
 })
 
 onUnmounted(async () => {
-  window.removeEventListener('resize', setContainerHeight);
+  window.removeEventListener('resize', () => {
+    setContainerHeight()
+    detectMobileView()
+  })
 
   // Cleanup intervals
   if (durationInterval) {
@@ -1062,5 +1126,33 @@ onUnmounted(async () => {
   padding-right: env(safe-area-inset-right);
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: env(safe-area-inset-left);
+}
+
+/* Fullscreen control inline positioning */
+.fullscreen-control-inline {
+  display: flex;
+  align-items: center;
+}
+
+/* UI hiding animations */
+.ui-fade-out {
+  transition: opacity 0.3s ease-out;
+  opacity: 0;
+}
+
+.ui-fade-in {
+  transition: opacity 0.3s ease-in;
+  opacity: 1;
+}
+
+/* Mobile viewport adjustments */
+@media (max-width: 768px) {
+  .mobile-header {
+    padding: 12px 16px;
+  }
+  
+  .mobile-controls {
+    padding: 12px 16px;
+  }
 }
 </style>

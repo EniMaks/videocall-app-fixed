@@ -1,10 +1,10 @@
 <template>
-  <header class="relative bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-    <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+  <header class="relative bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 safe-area-inset-top">
+    <div class="max-w-4xl mx-auto px-4 py-3 md:py-4 flex items-center justify-between">
       <div class="flex items-center space-x-3">
-        <router-link to="/" class="flex items-center space-x-3">
-          <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <router-link to="/" class="flex items-center space-x-2 md:space-x-3">
+          <div class="w-8 h-8 md:w-10 md:h-10 bg-green-500 rounded-full flex items-center justify-center">
+            <svg class="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
@@ -13,7 +13,7 @@
               ></path>
             </svg>
           </div>
-          <h1 class="text-xl font-semibold text-gray-900 dark:text-white">Video Call</h1>
+          <h1 class="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">Video Call</h1>
         </router-link>
       </div>
 
@@ -152,3 +152,24 @@ const toggleTheme = () => {
   globalStore.toggleTheme()
 }
 </script>
+
+<style scoped>
+.safe-area-inset-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  /* Ensure header is compact on mobile */
+  .mobile-compact {
+    min-height: 60px;
+  }
+  
+  /* Hide some elements on very small screens */
+  @media (max-width: 480px) {
+    .hidden-xs {
+      display: none;
+    }
+  }
+}
+</style>

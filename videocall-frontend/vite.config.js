@@ -33,10 +33,12 @@ export default defineConfig({
         theme_color: '#00C853',
         background_color: '#ffffff',
         display: 'standalone',
-        orientation: 'portrait',
+        orientation: 'any',
         start_url: '/',
         scope: '/',
         categories: ['communication', 'productivity'],
+        display_override: ['standalone', 'minimal-ui'],
+        prefer_related_applications: false,
         icons: [
           {
             src: 'pwa-192x192.png',
@@ -80,6 +82,19 @@ export default defineConfig({
               },
             ],
           },
+        ],
+        edge_side_panel: {
+          preferred_width: 400
+        },
+        launch_handler: {
+          client_mode: ['navigate-existing', 'auto']
+        },
+        handle_links: 'preferred',
+        protocol_handlers: [
+          {
+            protocol: 'web+videocall',
+            url: '/join/%s'
+          }
         ],
       },
       devOptions: {
