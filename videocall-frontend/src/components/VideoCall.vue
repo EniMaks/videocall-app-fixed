@@ -207,6 +207,85 @@
           <span>{{ connectionQualityText }}</span>
         </div>
       </div>
+      
+      <!-- Local Video (draggable and resizable) -->
+      <div
+        v-if="webrtcStore.hasLocalVideo"
+        ref="localVideoContainer"
+        :style="localVideoStyle"
+        :class="[
+          'fixed rounded-xl overflow-hidden shadow-2xl transition-all duration-300 cursor-pointer border-2 z-20',
+          webrtcStore.isVideoEnabled ? 'border-green-400' : 'border-gray-600',
+          isDragging ? 'dragging' : '',
+          isResizing ? 'resizing' : ''
+        ]"
+        @mousedown="startDragging"
+        @touchstart="startDragging"
+      >
+        <video
+          ref="localVideoRef"
+          autoplay
+          muted
+          playsinline
+          class="w-full h-full object-cover"
+          :class="{ mirror: shouldMirrorLocal }"
+        ></video>
+
+        <!-- Resize handle -->
+        <div
+          class="resize-handle absolute bottom-0 right-0 w-4 h-4 bg-blue-500 rounded-tl-lg cursor-se-resize opacity-70 hover:opacity-100"
+          @mousedown="startResizing"
+          @touchstart="startResizing"
+        >
+          <div class="w-full h-full flex items-end justify-end p-1">
+            <div class="w-0 h-0 border-l-2 border-b-2 border-white"></div>
+          </div>
+        </div>
+
+        <!-- Local video controls overlay -->
+        <div
+          class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-opacity flex items-center justify-center opacity-0 hover:opacity-100"
+        >
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"
+            ></path>
+          </svg>
+        </div>
+
+        <!-- Muted indicator -->
+        <div
+          v-if="!webrtcStore.isAudioEnabled"
+          class="absolute bottom-2 left-2 bg-red-500 rounded-full p-1"
+        >
+          <svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1m0 0V7a3 3 0 013-3h8a3 3 0 013 3v2M4 9h1m11 0h5m-9 0a1 1 0 011-1v-1a1 1 0 011-1m-1 1v1a1 1 0 001 1M9 7h8a3 3 0 013 3v2"
+            ></path>
+          </svg>
+        </div>
+
+        <!-- Camera off indicator -->
+        <div
+          v-if="!webrtcStore.isVideoEnabled"
+          class="absolute inset-0 bg-gray-200 dark:bg-gray-800 flex items-center justify-center transition-colors"
+        >
+          <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636"
+            ></path>
+          </svg>
+        </div>
+      </div>
     </div>
 
     <!-- Controls moved to bottom -->
@@ -244,7 +323,7 @@
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
-              d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1m0 0V7a3 3 0 013-3h8a3 3 0 013 3v2M4 9h1m11 0h5m-9 0a1 1 0 011-1v-1a1 1 0 011-1m-1 1v1a1 1 0 001 1M9 7h8a3 3 0 003 3v2"
+              d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1m0 0V7a3 3 0 013-3h8a3 3 0 013 3v2M4 9h1m11 0h5m-9 0a1 1 0 011-1v-1a1 1 0 011-1m-1 1v1a1 1 0 001 1M9 7h8a3 3 0 013 3v2"
             ></path>
           </svg>
         </button>
@@ -304,7 +383,8 @@
           title="Settings"
           @click="showSettingsModal = true"
         >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
         </button>
         
         <!-- End Call -->
@@ -524,10 +604,10 @@ import { useRoomsStore } from '../stores/rooms'
 import { useGlobalStore } from '../stores/global'
 import { utils } from '../services/utils'
 import { webrtcService } from '../services/webrtc'
-import SettingsPanel from './SettingsPanel.vue'; // <-- Import SettingsPanel
+import SettingsPanel from './SettingsPanel.vue'
 import FullscreenControl from './FullscreenControl.vue'
 
-const showSettingsModal = ref(false); // <-- Add this ref
+const showSettingsModal = ref(false)
 
 const route = useRoute()
 const router = useRouter()
@@ -562,12 +642,12 @@ const connectingSubMessage = ref(t('loading.preparingCall'))
 // Fullscreen and UI state
 const isFullscreenMode = ref(false)
 const shouldHideUI = ref(false)
-const shouldAutoFullscreen = ref(true) // Auto fullscreen for video calls
+const shouldAutoFullscreen = ref(true)
 const isMobileView = ref(false)
 
 // Draggable video state
 const localVideoPosition = ref({ x: 20, y: 20 })
-const localVideoSize = ref({ width: 200, height: 150 }) // 4:3 aspect ratio
+const localVideoSize = ref({ width: 200, height: 150 })
 const isDragging = ref(false)
 const isResizing = ref(false)
 const dragOffset = ref({ x: 0, y: 0 })
@@ -613,7 +693,7 @@ const connectionStatusColor = computed(() => {
 })
 
 const participantCount = computed(() => {
-  return (webrtcStore.remoteParticipants?.length || 0) + 1 // +1 for local participant
+  return (webrtcStore.remoteParticipants?.length || 0) + 1
 })
 
 const roomLink = computed(() => {
@@ -902,7 +982,7 @@ const startStatsMonitoring = () => {
       (quality, stats) => {
         connectionStats.value = stats
       },
-      2000, // Update every 2 seconds
+      2000,
     )
   }
 }
