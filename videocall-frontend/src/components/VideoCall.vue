@@ -1,12 +1,15 @@
 <!-- src/components/VideoCall.vue - Complete main video call component -->
+<!-- src/components/VideoCall.vue - Complete main video call component -->
 <template>
   <div ref="callContainer" class="viewport-fixed bg-gray-50 dark:bg-black flex flex-col transition-colors">
-    <!-- Fullscreen Control -->
+    <!-- Fullscreen Control - only shown when not in auto mode and not in header -->
     <FullscreenControl 
+      v-if="!shouldAutoFullscreen && !isFullscreenMode"
       ref="fullscreenControl" 
       :auto-mode="shouldAutoFullscreen"
       target="body"
       @fullscreen-change="onFullscreenChange" 
+      class="fixed top-4 right-4 z-30"
     />
     <!-- Header -->
     <header
@@ -45,7 +48,7 @@
 
         <!-- Fullscreen button -->
         <FullscreenControl 
-          v-if="!shouldAutoFullscreen" 
+          v-if="!shouldAutoFullscreen && !isFullscreenMode" 
           class="fullscreen-control-inline"
         />
 
@@ -188,39 +191,19 @@
         </div>
       </div>
 
-      <!-- Connection quality indicator -->
-      <div
-        v-if="connectionStats && showConnectionQuality"
-        class="absolute top-4 right-4 bg-black bg-opacity-50 dark:bg-gray-800 dark:bg-opacity-90 px-3 py-2 rounded-lg text-white dark:text-gray-200 text-sm z-10 transition-colors"
-      >
-        <div class="flex items-center space-x-2">
-          <div
-            :class="[
-              'w-3 h-3 rounded-full',
-              connectionQuality >= 80
-                ? 'bg-green-400'
-                : connectionQuality >= 50
-                  ? 'bg-yellow-400'
-                  : 'bg-red-400',
-            ]"
-          ></div>
-          <span>{{ connectionQualityText }}</span>
-        </div>
-      </div>
-      
-      <!-- Local Video (draggable and resizable) -->
+      <!-- Local Video (picture-in-picture) -->
       <div
         v-if="webrtcStore.hasLocalVideo"
-        ref="localVideoContainer"
-        :style="localVideoStyle"
         :class="[
-          'fixed rounded-xl overflow-hidden shadow-2xl transition-all duration-300 cursor-pointer border-2 z-20',
+          'absolute z-20 rounded-xl overflow-hidden shadow-2xl transition-all duration-300 cursor-pointer border-2',
+          localVideoSize === 'small'
+            ? 'w-32 h-24 bottom-36 right-4'
+            : localVideoSize === 'large'
+              ? 'w-64 h-48 bottom-36 right-4'
+              : 'w-48 h-36 bottom-36 right-4',
           webrtcStore.isVideoEnabled ? 'border-green-400' : 'border-gray-600',
-          isDragging ? 'dragging' : '',
-          isResizing ? 'resizing' : ''
         ]"
-        @mousedown="startDragging"
-        @touchstart="startDragging"
+        @click="toggleLocalVideoSize"
       >
         <video
           ref="localVideoRef"
@@ -231,17 +214,6 @@
           :class="{ mirror: shouldMirrorLocal }"
         ></video>
 
-        <!-- Resize handle -->
-        <div
-          class="resize-handle absolute bottom-0 right-0 w-4 h-4 bg-blue-500 rounded-tl-lg cursor-se-resize opacity-70 hover:opacity-100"
-          @mousedown="startResizing"
-          @touchstart="startResizing"
-        >
-          <div class="w-full h-full flex items-end justify-end p-1">
-            <div class="w-0 h-0 border-l-2 border-b-2 border-white"></div>
-          </div>
-        </div>
-
         <!-- Local video controls overlay -->
         <div
           class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-opacity flex items-center justify-center opacity-0 hover:opacity-100"
@@ -251,7 +223,7 @@
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
-              d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"
+              d="M4 8V4m0 0h4M4 4l5 5m11-5v4m0-4h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"
             ></path>
           </svg>
         </div>
@@ -286,14 +258,44 @@
           </svg>
         </div>
       </div>
+
+      <!-- Connection quality indicator -->
+      <div
+        v-if="connectionStats && showConnectionQuality"
+        class="absolute top-4 right-4 bg-black bg-opacity-50 dark:bg-gray-800 dark:bg-opacity-90 px-3 py-2 rounded-lg text-white dark:text-gray-200 text-sm z-10 transition-colors"
+      >
+        <div class="flex items-center space-x-2">
+          <div
+            :class="[
+              'w-3 h-3 rounded-full',
+              connectionQuality >= 80
+                ? 'bg-green-400'
+                : connectionQuality >= 50
+                  ? 'bg-yellow-400'
+                  : 'bg-red-400',
+            ]"
+          ></div>
+          <span>{{ connectionQualityText }}</span>
+        </div>
+      </div>
     </div>
 
-    <!-- Controls moved to bottom -->
+    <!-- Controls -->
     <div :class="[
       'bg-gradient-to-t from-gray-200 to-gray-100 dark:from-gray-900 dark:to-gray-800 py-4 safe-area-inset transition-colors border-t border-gray-300 dark:border-gray-700',
       { 'mobile-controls': isMobileView },
-      { 'fullscreen-overlay': isFullscreenMode }
+      { 'hidden': isFullscreenMode && shouldHideUI }
     ]">
+      
+      <!-- Fullscreen control in fullscreen mode -->
+      <div v-if="isFullscreenMode && !shouldAutoFullscreen" class="flex justify-end mb-2">
+        <FullscreenControl 
+          ref="fullscreenControlInline" 
+          :auto-mode="false"
+          target="body"
+          @fullscreen-change="onFullscreenChange" 
+        />
+      </div>
       <div class="max-w-md mx-auto flex items-center justify-center space-x-6">
         <!-- Toggle Audio -->
         <button
@@ -383,8 +385,7 @@
           title="Settings"
           @click="showSettingsModal = true"
         >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
         </button>
         
         <!-- End Call -->
@@ -604,10 +605,10 @@ import { useRoomsStore } from '../stores/rooms'
 import { useGlobalStore } from '../stores/global'
 import { utils } from '../services/utils'
 import { webrtcService } from '../services/webrtc'
-import SettingsPanel from './SettingsPanel.vue'
+import SettingsPanel from './SettingsPanel.vue'; // <-- Import SettingsPanel
 import FullscreenControl from './FullscreenControl.vue'
 
-const showSettingsModal = ref(false)
+const showSettingsModal = ref(false); // <-- Add this ref
 
 const route = useRoute()
 const router = useRouter()
@@ -621,12 +622,13 @@ const callContainer = ref(null)
 const localVideoRef = ref(null)
 const remoteVideoRef = ref(null)
 const fullscreenControl = ref(null)
-const localVideoContainer = ref(null)
+const fullscreenControlInline = ref(null)
 
 // Reactive state
 const roomInfo = ref(null)
 const callStartTime = ref(null)
 const callDuration = ref(0)
+const localVideoSize = ref('medium')
 const showShareModal = ref(false)
 const showStats = ref(false)
 const showMenu = ref(false)
@@ -641,16 +643,9 @@ const connectingSubMessage = ref(t('loading.preparingCall'))
 
 // Fullscreen and UI state
 const isFullscreenMode = ref(false)
-const shouldHideUI = ref(false) // Всегда false - UI не скрывается
-const shouldAutoFullscreen = ref(true)
+const shouldHideUI = ref(false)
+const shouldAutoFullscreen = ref(true) // Auto fullscreen for video calls
 const isMobileView = ref(false)
-
-// Draggable video state
-const localVideoPosition = ref({ x: 20, y: 20 })
-const localVideoSize = ref({ width: 200, height: 150 })
-const isDragging = ref(false)
-const isResizing = ref(false)
-const dragOffset = ref({ x: 0, y: 0 })
 
 // Connection monitoring
 const connectionStats = ref(null)
@@ -693,7 +688,7 @@ const connectionStatusColor = computed(() => {
 })
 
 const participantCount = computed(() => {
-  return (webrtcStore.remoteParticipants?.length || 0) + 1
+  return (webrtcStore.remoteParticipants?.length || 0) + 1 // +1 for local participant
 })
 
 const roomLink = computed(() => {
@@ -795,13 +790,6 @@ const remoteVideoInfo = computed(() => {
   return ''
 })
 
-// Computed for local video styles
-const localVideoStyle = computed(() => ({
-  transform: `translate(${localVideoPosition.value.x}px, ${localVideoPosition.value.y}px)`,
-  width: `${localVideoSize.value.width}px`,
-  height: `${localVideoSize.value.height}px`
-}))
-
 // Methods
 const detectMobileView = () => {
   isMobileView.value = window.innerWidth <= 768 || /Mobi|Android/i.test(navigator.userAgent)
@@ -811,13 +799,6 @@ const onFullscreenChange = (isFullscreen) => {
   isFullscreenMode.value = isFullscreen
   // Всегда оставляем UI видимым в полноэкранном режиме
   shouldHideUI.value = false
-  
-  // Ограничиваем позицию видео при входе в полноэкранный режим
-  if (isFullscreen) {
-    setTimeout(() => {
-      constrainPosition()
-    }, 100)
-  }
 }
 
 const setContainerHeight = () => {
@@ -939,6 +920,13 @@ const handleEndCall = async () => {
   }
 }
 
+const toggleLocalVideoSize = () => {
+  const sizes = ['small', 'medium', 'large']
+  const currentIndex = sizes.indexOf(localVideoSize.value)
+  const nextIndex = (currentIndex + 1) % sizes.length
+  localVideoSize.value = sizes[nextIndex]
+}
+
 const shareRoom = () => {
   showShareModal.value = true
   showMenu.value = false
@@ -982,94 +970,8 @@ const startStatsMonitoring = () => {
       (quality, stats) => {
         connectionStats.value = stats
       },
-      2000,
+      2000, // Update every 2 seconds
     )
-  }
-}
-
-// Methods for draggable video
-const startDragging = (event) => {
-  // Предотвращаем перетаскивание при изменении размера
-  if (event.target.closest('.resize-handle')) return
-  
-  isDragging.value = true
-  const rect = localVideoContainer.value.getBoundingClientRect()
-  
-  dragOffset.value = {
-    x: (event.clientX || event.touches[0].clientX) - rect.left,
-    y: (event.clientY || event.touches[0].clientY) - rect.top
-  }
-  
-  event.preventDefault()
-}
-
-const handleDragging = (event) => {
-  if (!isDragging.value) return
-  
-  const clientX = event.clientX || (event.touches && event.touches[0].clientX)
-  const clientY = event.clientY || (event.touches && event.touches[0].clientY)
-  
-  if (!clientX || !clientY) return
-  
-  // Вычисляем новую позицию
-  let newX = clientX - dragOffset.value.x
-  let newY = clientY - dragOffset.value.y
-  
-  // Применяем ограничения границ
-  const bounds = calculateBounds()
-  newX = Math.max(bounds.minX, Math.min(bounds.maxX, newX))
-  newY = Math.max(bounds.minY, Math.min(bounds.maxY, newY))
-  
-  localVideoPosition.value = { x: newX, y: newY }
-  event.preventDefault()
-}
-
-const stopDragging = () => {
-  isDragging.value = false
-  isResizing.value = false
-}
-
-const startResizing = (event) => {
-  isResizing.value = true
-  event.stopPropagation()
-  event.preventDefault()
-}
-
-const handleResizing = (event) => {
-  if (!isResizing.value) return
-  
-  const clientX = event.clientX || (event.touches && event.touches[0].clientX)
-  const clientY = event.clientY || (event.touches && event.touches[0].clientY)
-  
-  if (!clientX || !clientY) return
-  
-  const rect = localVideoContainer.value.getBoundingClientRect()
-  const newWidth = Math.max(120, clientX - rect.left + 10)
-  const newHeight = (newWidth * 3) / 4 // Сохраняем соотношение 4:3
-  
-  localVideoSize.value = { width: newWidth, height: newHeight }
-  event.preventDefault()
-}
-
-const calculateBounds = () => {
-  const headerHeight = isFullscreenMode.value ? 60 : 0
-  const controlsHeight = 70
-  const padding = 10
-  
-  return {
-    minX: padding,
-    maxX: window.innerWidth - localVideoSize.value.width - padding,
-    minY: headerHeight + padding,
-    maxY: window.innerHeight - localVideoSize.value.height - controlsHeight - padding
-  }
-}
-
-const constrainPosition = () => {
-  const bounds = calculateBounds()
-  
-  localVideoPosition.value = {
-    x: Math.max(bounds.minX, Math.min(bounds.maxX, localVideoPosition.value.x)),
-    y: Math.max(bounds.minY, Math.min(bounds.maxY, localVideoPosition.value.y))
   }
 }
 
@@ -1133,26 +1035,15 @@ onMounted(() => {
   window.addEventListener('resize', () => {
     setContainerHeight()
     detectMobileView()
-    constrainPosition() // Пересчитываем границы при изменении размера
   })
   
-  // Добавляем обработчики событий для перетаскивания
-  window.addEventListener('mousemove', handleDragging)
-  window.addEventListener('touchmove', handleDragging, { passive: false })
-  window.addEventListener('mouseup', stopDragging)
-  window.addEventListener('touchend', stopDragging)
-  
-  // Добавляем обработчики событий для изменения размера
-  window.addEventListener('mousemove', handleResizing)
-  window.addEventListener('touchmove', handleResizing, { passive: false })
-  
-  // Включаем автоматический полноэкранный режим для мобильных устройств
+  // Enable auto fullscreen for mobile devices
   if (isMobileView.value && shouldAutoFullscreen.value) {
     setTimeout(() => {
       if (fullscreenControl.value) {
         fullscreenControl.value.enableAutoMode()
       }
-    }, 2000) // Задержка, чтобы пользователь успел ознакомиться с интерфейсом
+    }, 2000) // Delay to allow user to get familiar with the interface
   }
 })
 
@@ -1162,7 +1053,7 @@ onUnmounted(async () => {
     detectMobileView()
   })
 
-  // Очищаем интервалы
+  // Cleanup intervals
   if (durationInterval) {
     clearInterval(durationInterval)
   }
@@ -1170,7 +1061,7 @@ onUnmounted(async () => {
     clearInterval(statsMonitor.value)
   }
 
-  // Завершаем вызов и покидаем комнату
+  // End call and leave room
   try {
     await webrtcStore.endCall()
 
@@ -1180,14 +1071,6 @@ onUnmounted(async () => {
   } catch (error) {
     console.error('Cleanup error:', error)
   }
-  
-  // Удаляем обработчики событий
-  window.removeEventListener('mousemove', handleDragging)
-  window.removeEventListener('touchmove', handleDragging)
-  window.removeEventListener('mouseup', stopDragging)
-  window.removeEventListener('touchend', stopDragging)
-  window.removeEventListener('mousemove', handleResizing)
-  window.removeEventListener('touchmove', handleResizing)
 })
 </script>
 
@@ -1285,74 +1168,14 @@ onUnmounted(async () => {
   position: fixed;
   left: 0;
   right: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(5px);
   z-index: 1000;
 }
 
-.fullscreen-overlay.header {
-  top: 0;
-  height: 60px;
-}
-
 .fullscreen-overlay.controls {
   bottom: 0;
-  height: 70px;
-}
-
-/* Draggable video styles */
-.draggable-video {
-  position: fixed;
-  z-index: 1000;
-  border: 2px solid #3b82f6;
-  border-radius: 8px;
-  cursor: move;
-  transition: box-shadow 0.2s ease;
-}
-
-.draggable-video:hover {
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-}
-
-.dragging {
-  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
-  transform: scale(1.02);
-}
-
-.resizing {
-  cursor: se-resize;
-}
-
-.resize-handle {
-  transition: opacity 0.2s ease;
-}
-
-/* Mobile viewport adjustments */
-@media (max-width: 768px) {
-  /* Smaller buttons for mobile */
-  .control-button {
-    @apply p-3;
-  }
-
-  .control-button svg {
-    @apply w-5 h-5;
-  }
-  
-  /* Adjust fullscreen overlay for mobile */
-  .fullscreen-overlay.header {
-    height: 50px;
-    padding: 10px 15px;
-  }
-  
-  .fullscreen-overlay.controls {
-    height: 60px;
-    padding: 10px 15px;
-  }
-  
-  /* Adjust local video size for mobile */
-  .local-video-mobile {
-    width: 160px;
-    height: 120px;
-  }
+  height: 80px;
+  padding: 10px 15px;
 }
 </style>

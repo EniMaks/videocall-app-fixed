@@ -55,6 +55,7 @@ const emit = defineEmits(['fullscreen-change'])
 // Reactive state
 const isFullscreen = ref(false)
 const isAutoFullscreen = ref(props.autoMode)
+const pendingAutoFullscreen = ref(false)
 
 // Computed
 const targetElement = computed(() => {
@@ -83,6 +84,10 @@ const enterFullscreen = async () => {
     emit('fullscreen-change', true)
   } catch (error) {
     console.warn('Failed to enter fullscreen:', error)
+    // Если автоматический режим, помечаем, что переход в полноэкранный режим ожидает пользовательского действия
+    if (isAutoFullscreen.value) {
+      pendingAutoFullscreen.value = true
+    }
   }
 }
 
@@ -100,6 +105,9 @@ const exitFullscreen = async () => {
     
     isFullscreen.value = false
     emit('fullscreen-change', false)
+    
+    // Сбрасываем флаг ожидания
+    pendingAutoFullscreen.value = false
   } catch (error) {
     console.warn('Failed to exit fullscreen:', error)
   }
@@ -114,13 +122,18 @@ const toggleFullscreen = async () => {
 }
 
 // Auto mode functionality
-const enableAutoMode = async () => {
+const enableAutoMode = () => {
   isAutoFullscreen.value = true
-  await enterFullscreen()
+  // Пытаемся войти в полноэкранный режим, но не блокируем, если это невозможно
+  enterFullscreen().catch(() => {
+    // Если не удалось, просто помечаем, что переход в полноэкранный режим ожидает пользовательского действия
+    pendingAutoFullscreen.value = true
+  })
 }
 
 const disableAutoMode = async () => {
   isAutoFullscreen.value = false
+  pendingAutoFullscreen.value = false
   if (isFullscreen.value) {
     await exitFullscreen()
   }
@@ -137,6 +150,11 @@ const handleFullscreenChange = () => {
   
   isFullscreen.value = isCurrentlyFullscreen
   emit('fullscreen-change', isCurrentlyFullscreen)
+  
+  // Сбрасываем флаг ожидания при любом изменении состояния полноэкранного режима
+  if (isCurrentlyFullscreen || !isAutoFullscreen.value) {
+    pendingAutoFullscreen.value = false
+  }
 }
 
 // Expose methods for parent component
@@ -162,7 +180,10 @@ onMounted(() => {
   
   // Auto-enable fullscreen if in auto mode
   if (props.autoMode) {
-    enableAutoMode()
+    // Не пытаемся автоматически войти в полноэкранный режим при монтировании
+    // Вместо этого устанавливаем флаг, что переход в полноэкранный режим ожидает пользовательского действия
+    isAutoFullscreen.value = true
+    pendingAutoFullscreen.value = true
   }
 })
 
