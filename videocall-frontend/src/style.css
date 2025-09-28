@@ -95,7 +95,7 @@ body.dark {
 /* Mobile responsive adjustments */
 @media (max-width: 768px) {
   .control-button {
-    @apply p-2;
+    @apply p-2.5; /* Reduced from p-3 to p-2.5 for better fit on mobile */
   }
 
   .control-button svg {
@@ -165,26 +165,26 @@ input, select, textarea {
 @media (max-width: 768px) {
   /* Ensure header doesn't take too much space on mobile */
   .mobile-header {
-    min-height: 60px;
-    max-height: 80px;
+    min-height: 50px;
+    max-height: 60px;
   }
   
   /* Adjust video call controls for mobile */
   .mobile-controls {
-    padding: 12px 16px;
-    min-height: 80px;
+    padding: 10px 15px;
+    min-height: 60px;
   }
   
   /* Make video area use remaining space */
   .mobile-video-area {
-    height: calc(100vh - 60px - 80px); /* viewport - header - controls */
-    height: calc(100dvh - 60px - 80px);
+    height: calc(100vh - 50px - 60px); /* viewport - header - controls */
+    height: calc(100dvh - 50px - 60px);
   }
   
   /* Ensure router-view takes full height on mobile */
   .mobile-router-view {
-    height: calc(100vh - 60px); /* viewport minus header */
-    height: calc(100dvh - 60px);
+    height: calc(100vh - 50px); /* viewport minus header */
+    height: calc(100dvh - 50px);
     overflow: hidden;
   }
   
@@ -199,5 +199,26 @@ input, select, textarea {
     max-height: calc(100vh - 32px);
     max-height: calc(100dvh - 32px);
     overflow-y: auto;
+  }
+  
+  /* Even smaller buttons for very small screens */
+  @media (max-width: 480px) {
+    .control-button {
+      @apply p-2;
+    }
+    
+    .mobile-header {
+      min-height: 45px;
+      max-height: 50px;
+    }
+    
+    .mobile-controls {
+      min-height: 50px;
+    }
+    
+    .mobile-video-area {
+      height: calc(100vh - 45px - 50px);
+      height: calc(100dvh - 45px - 50px);
+    }
   }
 }

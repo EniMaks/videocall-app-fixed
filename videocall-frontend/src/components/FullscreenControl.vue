@@ -28,38 +28,6 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"/>
       </svg>
     </div>
-
-    <!-- Manual control overlay when in auto mode -->
-    <div 
-      v-if="isAutoFullscreen && showManualControls" 
-      class="manual-control-overlay"
-      @click.stop
-    >
-      <div class="bg-black bg-opacity-75 text-white p-4 rounded-lg space-y-2">
-        <p class="text-sm">{{ $t('fullscreen.manualControl') }}</p>
-        <div class="flex space-x-2">
-          <button
-            class="btn-secondary text-xs px-3 py-1"
-            @click="exitFullscreen"
-          >
-            {{ $t('fullscreen.exit') }}
-          </button>
-          <button
-            class="btn-secondary text-xs px-3 py-1"
-            @click="hideManualControls"
-          >
-            {{ $t('fullscreen.hide') }}
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tap area for manual controls in auto mode -->
-    <div 
-      v-if="isAutoFullscreen && !showManualControls && isFullscreen"
-      class="tap-area"
-      @click="showManualControlsTemporarily"
-    ></div>
   </div>
 </template>
 
@@ -87,8 +55,6 @@ const emit = defineEmits(['fullscreen-change'])
 // Reactive state
 const isFullscreen = ref(false)
 const isAutoFullscreen = ref(props.autoMode)
-const showManualControls = ref(false)
-const manualControlsTimer = ref(null)
 
 // Computed
 const targetElement = computed(() => {
@@ -147,25 +113,6 @@ const toggleFullscreen = async () => {
   }
 }
 
-const showManualControlsTemporarily = () => {
-  showManualControls.value = true
-  
-  if (manualControlsTimer.value) {
-    clearTimeout(manualControlsTimer.value)
-  }
-  
-  manualControlsTimer.value = setTimeout(() => {
-    showManualControls.value = false
-  }, 5000) // Hide after 5 seconds
-}
-
-const hideManualControls = () => {
-  showManualControls.value = false
-  if (manualControlsTimer.value) {
-    clearTimeout(manualControlsTimer.value)
-  }
-}
-
 // Auto mode functionality
 const enableAutoMode = async () => {
   isAutoFullscreen.value = true
@@ -190,11 +137,6 @@ const handleFullscreenChange = () => {
   
   isFullscreen.value = isCurrentlyFullscreen
   emit('fullscreen-change', isCurrentlyFullscreen)
-  
-  // If we exit fullscreen in auto mode, disable auto mode
-  if (!isCurrentlyFullscreen && isAutoFullscreen.value) {
-    isAutoFullscreen.value = false
-  }
 }
 
 // Expose methods for parent component
@@ -229,10 +171,6 @@ onUnmounted(() => {
   document.removeEventListener('webkitfullscreenchange', handleFullscreenChange)
   document.removeEventListener('mozfullscreenchange', handleFullscreenChange)
   document.removeEventListener('MSFullscreenChange', handleFullscreenChange)
-  
-  if (manualControlsTimer.value) {
-    clearTimeout(manualControlsTimer.value)
-  }
 })
 </script>
 
@@ -243,25 +181,5 @@ onUnmounted(() => {
 
 .fullscreen-indicator {
   @apply p-2 rounded-full bg-green-500 bg-opacity-20 flex items-center justify-center;
-}
-
-.manual-control-overlay {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 9999;
-  pointer-events: all;
-}
-
-.tap-area {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1;
-  pointer-events: all;
-  background: transparent;
 }
 </style>

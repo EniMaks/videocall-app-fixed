@@ -1,5 +1,4 @@
 <!-- src/components/VideoCall.vue - Complete main video call component -->
-<!-- src/components/VideoCall.vue - Complete main video call component -->
 <template>
   <div ref="callContainer" class="viewport-fixed bg-gray-50 dark:bg-black flex flex-col transition-colors">
     <!-- Fullscreen Control -->
@@ -14,7 +13,7 @@
       :class="[
         'bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-4 flex items-center justify-between z-10 safe-area-inset border-b border-gray-200 dark:border-gray-700 transition-colors',
         { 'mobile-header': isMobileView },
-        { 'hidden': isFullscreenMode && shouldHideUI }
+        { 'fullscreen-overlay': isFullscreenMode }
       ]"
     >
       <div class="flex items-center space-x-4">
@@ -189,19 +188,19 @@
         </div>
       </div>
 
-      <!-- Local Video (picture-in-picture) -->
+      <!-- Local Video (draggable and resizable) -->
       <div
         v-if="webrtcStore.hasLocalVideo"
+        ref="localVideoContainer"
+        :style="localVideoStyle"
         :class="[
-          'absolute z-20 rounded-xl overflow-hidden shadow-2xl transition-all duration-300 cursor-pointer border-2',
-          localVideoSize === 'small'
-            ? 'w-32 h-24 bottom-36 right-4'
-            : localVideoSize === 'large'
-              ? 'w-64 h-48 bottom-36 right-4'
-              : 'w-48 h-36 bottom-36 right-4',
+          'fixed rounded-xl overflow-hidden shadow-2xl transition-all duration-300 cursor-pointer border-2 z-20',
           webrtcStore.isVideoEnabled ? 'border-green-400' : 'border-gray-600',
+          isDragging ? 'dragging' : '',
+          isResizing ? 'resizing' : ''
         ]"
-        @click="toggleLocalVideoSize"
+        @mousedown="startDragging"
+        @touchstart="startDragging"
       >
         <video
           ref="localVideoRef"
@@ -211,6 +210,17 @@
           class="w-full h-full object-cover"
           :class="{ mirror: shouldMirrorLocal }"
         ></video>
+
+        <!-- Resize handle -->
+        <div
+          class="resize-handle absolute bottom-0 right-0 w-4 h-4 bg-blue-500 rounded-tl-lg cursor-se-resize opacity-70 hover:opacity-100"
+          @mousedown="startResizing"
+          @touchstart="startResizing"
+        >
+          <div class="w-full h-full flex items-end justify-end p-1">
+            <div class="w-0 h-0 border-l-2 border-b-2 border-white"></div>
+          </div>
+        </div>
 
         <!-- Local video controls overlay -->
         <div
@@ -282,7 +292,7 @@
     <div :class="[
       'bg-gradient-to-t from-gray-200 to-gray-100 dark:from-gray-900 dark:to-gray-800 py-4 safe-area-inset transition-colors border-t border-gray-300 dark:border-gray-700',
       { 'mobile-controls': isMobileView },
-      { 'hidden': isFullscreenMode && shouldHideUI }
+      { 'fullscreen-overlay': isFullscreenMode }
     ]">
       <div class="max-w-md mx-auto flex items-center justify-center space-x-6">
         <!-- Toggle Audio -->
@@ -615,7 +625,7 @@ const fullscreenControl = ref(null)
 const roomInfo = ref(null)
 const callStartTime = ref(null)
 const callDuration = ref(0)
-const localVideoSize = ref('medium')
+const localVideoSize = ref({ width: 200, height: 150 }) // 4:3 aspect ratio
 const showShareModal = ref(false)
 const showStats = ref(false)
 const showMenu = ref(false)
@@ -784,13 +794,14 @@ const detectMobileView = () => {
 
 const onFullscreenChange = (isFullscreen) => {
   isFullscreenMode.value = isFullscreen
-  // Auto-hide UI in fullscreen mode on mobile
-  if (isFullscreen && isMobileView.value) {
+  // Keep UI always visible in fullscreen mode
+  shouldHideUI.value = false
+  
+  // Constrain video position when entering fullscreen
+  if (isFullscreen) {
     setTimeout(() => {
-      shouldHideUI.value = true
-    }, 3000) // Hide UI after 3 seconds
-  } else {
-    shouldHideUI.value = false
+      constrainPosition()
+    }, 100)
   }
 }
 
@@ -1017,6 +1028,90 @@ const vClickOutside = {
   },
 }
 
+// Methods for draggable video
+const startDragging = (event) => {
+  // Prevent dragging when resizing
+  if (event.target.closest('.resize-handle')) return
+  
+  isDragging.value = true
+  const rect = localVideoContainer.value.getBoundingClientRect()
+  
+  dragOffset.value = {
+    x: (event.clientX || event.touches[0].clientX) - rect.left,
+    y: (event.clientY || event.touches[0].clientY) - rect.top
+  }
+  
+  event.preventDefault()
+}
+
+const handleDragging = (event) => {
+  if (!isDragging.value) return
+  
+  const clientX = event.clientX || (event.touches && event.touches[0].clientX)
+  const clientY = event.clientY || (event.touches && event.touches[0].clientY)
+  
+  if (!clientX || !clientY) return
+  
+  // Calculate new position
+  let newX = clientX - dragOffset.value.x
+  let newY = clientY - dragOffset.value.y
+  
+  // Apply boundary constraints
+  const bounds = calculateBounds()
+  newX = Math.max(bounds.minX, Math.min(bounds.maxX, newX))
+  newY = Math.max(bounds.minY, Math.min(bounds.maxY, newY))
+  
+  localVideoPosition.value = { x: newX, y: newY }
+  event.preventDefault()
+}
+
+const stopDragging = () => {
+  isDragging.value = false
+  isResizing.value = false
+}
+
+const startResizing = (event) => {
+  isResizing.value = true
+  event.stopPropagation()
+  event.preventDefault()
+}
+
+const handleResizing = (event) => {
+  if (!isResizing.value) return
+  
+  const clientX = event.clientX || (event.touches && event.touches[0].clientY)
+  const clientY = event.clientY || (event.touches && event.touches[0].clientY)
+  
+  const rect = localVideoContainer.value.getBoundingClientRect()
+  const newWidth = Math.max(120, clientX - rect.left + 10)
+  const newHeight = (newWidth * 3) / 4 // Maintain 4:3 aspect ratio
+  
+  localVideoSize.value = { width: newWidth, height: newHeight }
+  event.preventDefault()
+}
+
+const calculateBounds = () => {
+  const headerHeight = isFullscreenMode.value ? 60 : 0
+  const controlsHeight = 70
+  const padding = 10
+  
+  return {
+    minX: padding,
+    maxX: window.innerWidth - localVideoSize.value.width - padding,
+    minY: headerHeight + padding,
+    maxY: window.innerHeight - localVideoSize.value.height - controlsHeight - padding
+  }
+}
+
+const constrainPosition = () => {
+  const bounds = calculateBounds()
+  
+  localVideoPosition.value = {
+    x: Math.max(bounds.minX, Math.min(bounds.maxX, localVideoPosition.value.x)),
+    y: Math.max(bounds.minY, Math.min(bounds.maxY, localVideoPosition.value.y))
+  }
+}
+
 // Lifecycle
 onMounted(() => {
   console.log('VideoCall component mounted');
@@ -1028,7 +1123,18 @@ onMounted(() => {
   window.addEventListener('resize', () => {
     setContainerHeight()
     detectMobileView()
+    constrainPosition() // Recalculate boundaries on resize
   })
+  
+  // Add mouse/touch event listeners for dragging
+  window.addEventListener('mousemove', handleDragging)
+  window.addEventListener('touchmove', handleDragging, { passive: false })
+  window.addEventListener('mouseup', stopDragging)
+  window.addEventListener('touchend', stopDragging)
+  
+  // Add resize event listeners
+  window.addEventListener('mousemove', handleResizing)
+  window.addEventListener('touchmove', handleResizing, { passive: false })
   
   // Enable auto fullscreen for mobile devices
   if (isMobileView.value && shouldAutoFullscreen.value) {
@@ -1044,6 +1150,7 @@ onUnmounted(async () => {
   window.removeEventListener('resize', () => {
     setContainerHeight()
     detectMobileView()
+    constrainPosition() // Recalculate boundaries on resize
   })
 
   // Cleanup intervals
@@ -1064,6 +1171,14 @@ onUnmounted(async () => {
   } catch (error) {
     console.error('Cleanup error:', error)
   }
+
+  // Remove event listeners
+  window.removeEventListener('mousemove', handleDragging)
+  window.removeEventListener('touchmove', handleDragging)
+  window.removeEventListener('mouseup', stopDragging)
+  window.removeEventListener('touchend', stopDragging)
+  window.removeEventListener('mousemove', handleResizing)
+  window.removeEventListener('touchmove', handleResizing)
 })
 </script>
 
@@ -1153,6 +1268,78 @@ onUnmounted(async () => {
   
   .mobile-controls {
     padding: 12px 16px;
+  }
+}
+
+/* Fullscreen overlay styles */
+.fullscreen-overlay {
+  position: fixed;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  z-index: 1000;
+}
+
+.fullscreen-overlay.header {
+  top: 0;
+  height: 60px;
+}
+
+.fullscreen-overlay.controls {
+  bottom: 0;
+  height: 70px;
+}
+
+/* Draggable video styles */
+.draggable-video {
+  position: fixed;
+  z-index: 1000;
+  border: 2px solid #3b82f6;
+  border-radius: 8px;
+  cursor: move;
+  transition: box-shadow 0.2s ease;
+}
+
+.draggable-video:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+.dragging {
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+  transform: scale(1.02);
+}
+
+.resizing {
+  cursor: se-resize;
+}
+
+.resize-handle {
+  transition: opacity 0.2s ease;
+}
+
+/* Mobile viewport adjustments */
+@media (max-width: 768px) {
+  /* ... existing styles ... */
+  
+  /* Smaller buttons for mobile */
+  .control-button {
+    @apply p-3;
+  }
+
+  .control-button svg {
+    @apply w-5 h-5;
+  }
+  
+  /* Adjust fullscreen overlay for mobile */
+  .fullscreen-overlay.header {
+    height: 50px;
+    padding: 10px 15px;
+  }
+  
+  .fullscreen-overlay.controls {
+    height: 60px;
+    padding: 10px 15px;
   }
 }
 </style>
