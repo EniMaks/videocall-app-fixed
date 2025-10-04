@@ -23,16 +23,22 @@ export const useWebRTCStore = defineStore('webrtc', () => {
   const peerConnections = reactive({});
   const remoteStreams = reactive({});
   const connectionStates = reactive({});
-  const remoteParticipants = ref([]);
   
   const websocket = ref(null);
   const roomId = ref(null);
+
+  // Quality presets
+  const qualityPresets = {
+    '1080p': { width: { ideal: 1920 }, height: { ideal: 1080 } },
+    '720p': { width: { ideal: 1280 }, height: { ideal: 720 } },
+    '480p': { width: { ideal: 640 }, height: { ideal: 480 } },
+    '360p': { width: { ideal: 480 }, height: { ideal: 360 } },
+  };
 
   // --- Computed Properties ---
   const isConnected = computed(() => Object.values(connectionStates).some(s => s === 'connected'));
   const hasLocalVideo = computed(() => localStream.value !== null);
   const mainRemoteStream = computed(() => {
-    // Simple logic: return the first available remote stream
     const firstParticipantId = Object.keys(remoteStreams)[0];
     return firstParticipantId ? remoteStreams[firstParticipantId] : null;
   });
@@ -42,28 +48,31 @@ export const useWebRTCStore = defineStore('webrtc', () => {
   // --- Private Helper Functions ---
   const sendWebSocketMessage = (message) => {
     if (websocket.value && websocket.value.readyState === WebSocket.OPEN) {
+      console.log('%c[WS SEND]', 'color: #f43f5e', message.type, message);
       websocket.value.send(JSON.stringify(message));
     }
   };
 
   const _createPeerConnection = (participantId) => {
     if (peerConnections[participantId]) {
-      console.warn(`Peer connection for ${participantId} already exists.`);
+      console.warn(`[WebRTC] Peer connection for ${participantId} already exists.`);
       return peerConnections[participantId];
     }
 
-    console.log(`Creating new peer connection for participant: ${participantId}`);
-    const pc = new RTCPeerConnection(webrtcService.getIceServerConfig());
+    console.log(`%c[WebRTC] Creating new peer connection for participant: ${participantId}`, 'color: #22c55e');
+    const config = webrtcService.getIceServerConfig();
+    console.log('[WebRTC] Using ICE Server Config:', config);
+    const pc = new RTCPeerConnection(config);
 
-    // Add local stream tracks
     if (localStream.value) {
       localStream.value.getTracks().forEach(track => {
         pc.addTrack(track, localStream.value);
       });
+      console.log('[WebRTC] Added local stream tracks.');
     }
 
     pc.ontrack = (event) => {
-      console.log(`Received remote track from ${participantId}`);
+      console.log(`%c[WebRTC] Received remote track from ${participantId}`, 'color: #3b82f6');
       remoteStreams[participantId] = event.streams[0];
     };
 
@@ -80,15 +89,9 @@ export const useWebRTCStore = defineStore('webrtc', () => {
     pc.onconnectionstatechange = () => {
       const state = pc.connectionState;
       connectionStates[participantId] = state;
-      console.log(`Connection state for ${participantId} changed to: ${state}`);
+      console.log(`%c[WebRTC] Connection state for ${participantId} changed to: ${state}`, 'color: #eab308');
       if (state === 'failed') {
-         console.error(`ICE connection failed for participant ${participantId}. Restarting...`);
-         // Implement ICE restart logic if needed, for now just log
-         pc.createOffer({ iceRestart: true })
-           .then(offer => pc.setLocalDescription(offer))
-           .then(() => {
-             sendWebSocketMessage({ type: 'offer', offer: pc.localDescription, target: participantId });
-           });
+         console.error(`[WebRTC] ICE connection failed for participant ${participantId}.`);
       }
     };
     
@@ -102,24 +105,19 @@ export const useWebRTCStore = defineStore('webrtc', () => {
       delete peerConnections[participantId];
       delete remoteStreams[participantId];
       delete connectionStates[participantId];
-      console.log(`Closed peer connection for participant: ${participantId}`);
+      console.log(`%c[WebRTC] Closed peer connection for participant: ${participantId}`, 'color: #ef4444');
     }
   };
 
 
   // --- WebSocket Message Handlers ---
   const handleWebSocketMessage = async (data) => {
-    const { type, sender, target } = data;
-    
-    // Ignore messages not intended for us (if target is specified)
-    // Note: Backend doesn't currently set a local participant ID, so we accept all targeted messages for now.
-    
-    console.log('Received WebSocket message:', data.type, 'from', sender);
+    const { type, sender } = data;
+    console.log('%c[WS RECV]', 'color: #8b5cf6', type, data);
 
     switch (type) {
       case 'user_joined':
-        // A new user has joined the room. Let's create an offer for them.
-        console.log(`User ${data.participant_id} joined. Creating offer.`);
+        console.log(`[Signal] User ${data.participant_id} joined. Creating offer...`);
         const pc = _createPeerConnection(data.participant_id);
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
@@ -127,13 +125,12 @@ export const useWebRTCStore = defineStore('webrtc', () => {
         break;
 
       case 'user_left':
-        console.log(`User ${data.participant_id} left.`);
+        console.log(`[Signal] User ${data.participant_id} left.`);
         _closePeerConnection(data.participant_id);
         break;
 
       case 'webrtc_offer':
-        // We received an offer from a peer, create an answer.
-        console.log(`Received offer from ${sender}. Creating answer.`);
+        console.log(`[Signal] Received offer from ${sender}. Creating answer...`);
         const offerPc = _createPeerConnection(sender);
         await offerPc.setRemoteDescription(new RTCSessionDescription(data.offer));
         const answer = await offerPc.createAnswer();
@@ -142,27 +139,25 @@ export const useWebRTCStore = defineStore('webrtc', () => {
         break;
 
       case 'webrtc_answer':
-        // We received an answer to our offer.
-        console.log(`Received answer from ${sender}.`);
+        console.log(`[Signal] Received answer from ${sender}.`);
         const answerPc = peerConnections[sender];
         if (answerPc) {
           await answerPc.setRemoteDescription(new RTCSessionDescription(data.answer));
         } else {
-          console.error(`Received answer from unknown peer: ${sender}`);
+          console.error(`[Signal] Received answer from unknown peer: ${sender}`);
         }
         break;
 
       case 'ice_candidate':
-        console.log(`Received ICE candidate from ${sender}.`);
         const candidatePc = peerConnections[sender];
         if (candidatePc) {
           try {
             await candidatePc.addIceCandidate(new RTCIceCandidate(data.candidate));
           } catch (e) {
-            console.error('Error adding received ICE candidate', e);
+            console.error('[WebRTC] Error adding received ICE candidate', e);
           }
         } else {
-          console.error(`Received ICE candidate from unknown peer: ${sender}`);
+          console.error(`[Signal] Received ICE candidate from unknown peer: ${sender}`);
         }
         break;
 
@@ -178,7 +173,7 @@ export const useWebRTCStore = defineStore('webrtc', () => {
     if (localStream.value && !force) return { success: true };
     try {
       const constraints = {
-        video: { ...(settingsService.getQualityPresets()[selectedQuality.value] || {}), frameRate: { ideal: 30 } },
+        video: { ...(qualityPresets[selectedQuality.value] || {}), frameRate: { ideal: 30 } },
         audio: { echoCancellation: true, noiseSuppression: true },
       };
       if (selectedVideoDeviceId.value) constraints.video.deviceId = { exact: selectedVideoDeviceId.value };
@@ -201,12 +196,21 @@ export const useWebRTCStore = defineStore('webrtc', () => {
       const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
       const wsHost = import.meta.env.VITE_WS_BASE_URL || window.location.host;
       const wsUrl = `${protocol}://${wsHost}/ws/room/${roomId.value}/`;
+      console.log(`%c[WS] Connecting to ${wsUrl}`, 'color: #0ea5e9');
 
       websocket.value = new WebSocket(wsUrl);
-      websocket.value.onopen = () => resolve();
+      websocket.value.onopen = () => {
+        console.log('%c[WS] Connection established.', 'color: #22c55e');
+        resolve();
+      };
       websocket.value.onmessage = (event) => handleWebSocketMessage(JSON.parse(event.data));
-      websocket.value.onclose = () => console.log('WebSocket disconnected');
-      websocket.value.onerror = (err) => reject(err);
+      websocket.value.onclose = (event) => {
+        console.log(`%c[WS] Connection closed. Code: ${event.code}`, 'color: #ef4444');
+      };
+      websocket.value.onerror = (err) => {
+        console.error('[WS] Connection error:', err);
+        reject(err);
+      };
     });
   };
 
@@ -226,64 +230,53 @@ export const useWebRTCStore = defineStore('webrtc', () => {
 
   const endCall = () => {
     console.log("Ending call, cleaning up all connections.");
-    // Close all peer connections
     for (const participantId in peerConnections) {
       _closePeerConnection(participantId);
     }
     
-    // Stop local media tracks
     if (localStream.value) {
       localStream.value.getTracks().forEach(track => track.stop());
       localStream.value = null;
     }
 
-    // Close WebSocket
     if (websocket.value) {
       websocket.value.close(1000, 'Call ended by user');
       websocket.value = null;
     }
     
-    // Reset state
-    remoteParticipants.value = [];
     roomId.value = null;
   };
 
-  // This is a placeholder, as the original file had these and they might be used elsewhere
+  // Deprecated placeholders
   const createPeerConnection = () => ({ success: true });
   const createOffer = () => ({ success: true });
 
   return {
-    // State
     localStream,
-    remoteStreams, // Changed
-    peerConnections, // Changed
+    remoteStreams,
+    peerConnections,
     websocket,
     isConnected,
     isVideoEnabled,
     isAudioEnabled,
-    connectionStates, // Changed
-    remoteParticipants,
-    selectedVideoDeviceId,
-    selectedAudioDeviceId,
-    selectedQuality,
-    shouldMirror,
-
-    // Computed
+    connectionStates,
     hasLocalVideo,
-    hasRemoteVideo, // Changed
-    mainRemoteStream, // New
-
-    // Actions
+    hasRemoteVideo,
+    mainRemoteStream,
     initializeLocalMedia,
     connectWebSocket,
     toggleVideo,
     toggleAudio,
     endCall,
-    
-    // Deprecated placeholders, should be removed after refactoring components
-    createPeerConnection,
-    createOffer,
-    remoteStream: mainRemoteStream, // backward compatibility for components
-    connectionState: computed(() => isConnected.value ? 'connected' : 'disconnected'), // simplified
+    createPeerConnection, // Deprecated
+    createOffer, // Deprecated
+    remoteStream: mainRemoteStream,
+    connectionState: computed(() => {
+      const states = Object.values(connectionStates);
+      if (states.some(s => s === 'connected')) return 'connected';
+      if (states.some(s => s === 'connecting')) return 'connecting';
+      if (states.some(s => s === 'failed')) return 'failed';
+      return 'disconnected';
+    }),
   };
 });
