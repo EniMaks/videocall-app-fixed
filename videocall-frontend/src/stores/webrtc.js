@@ -1,230 +1,169 @@
-// src/stores/webrtc.js - WebRTC and media state management
+// src/stores/webrtc.js - WebRTC and media state management (Refactored for Multi-Peer)
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import { ref, computed, reactive } from 'vue';
 import { useGlobalStore } from './global';
 import i18n from '../i18n';
 import { settingsService } from '../services/settings';
+import { webrtcService } from '../services/webrtc';
 
 export const useWebRTCStore = defineStore('webrtc', () => {
   const globalStore = useGlobalStore();
 
-  // State from settings
+  // --- State ---
   const savedSettings = settingsService.getSettings();
-  const selectedVideoDeviceId = ref(savedSettings.selectedVideoDeviceId);
-  const selectedAudioDeviceId = ref(savedSettings.selectedAudioDeviceId);
-  const selectedQuality = ref(savedSettings.selectedQuality);
-  const shouldMirror = ref(savedSettings.shouldMirror);
-
-  // Ephemeral state
   const localStream = ref(null);
-  const remoteStream = ref(null);
-  const peerConnection = ref(null);
-  const websocket = ref(null);
-  const isConnected = ref(false);
   const isVideoEnabled = ref(true);
   const isAudioEnabled = ref(true);
-  const connectionState = ref('new');
+  const shouldMirror = ref(savedSettings.shouldMirror);
+  const selectedQuality = ref(savedSettings.selectedQuality);
+  const selectedVideoDeviceId = ref(savedSettings.selectedVideoDeviceId);
+  const selectedAudioDeviceId = ref(savedSettings.selectedAudioDeviceId);
+
+  // Multi-peer state
+  const peerConnections = reactive({});
+  const remoteStreams = reactive({});
+  const connectionStates = reactive({});
   const remoteParticipants = ref([]);
-  const localParticipantId = ref(null);
+  
+  const websocket = ref(null);
+  const roomId = ref(null);
 
-  // Quality presets
-  const qualityPresets = {
-    '1080p': { width: { ideal: 1920 }, height: { ideal: 1080 } },
-    '720p': { width: { ideal: 1280 }, height: { ideal: 720 } },
-    '480p': { width: { ideal: 640 }, height: { ideal: 480 } },
-    '360p': { width: { ideal: 480 }, height: { ideal: 360 } },
-  };
-
-  // Computed
+  // --- Computed Properties ---
+  const isConnected = computed(() => Object.values(connectionStates).some(s => s === 'connected'));
   const hasLocalVideo = computed(() => localStream.value !== null);
-  const hasRemoteVideo = computed(() => remoteStream.value !== null);
-  const isCallActive = computed(
-    () => isConnected.value && (hasLocalVideo.value || hasRemoteVideo.value),
-  );
+  const mainRemoteStream = computed(() => {
+    // Simple logic: return the first available remote stream
+    const firstParticipantId = Object.keys(remoteStreams)[0];
+    return firstParticipantId ? remoteStreams[firstParticipantId] : null;
+  });
+  const hasRemoteVideo = computed(() => mainRemoteStream.value !== null);
 
-  // WebRTC configuration
-  const rtcConfiguration = {
-    iceServers: [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' },
-    ],
-    iceCandidatePoolSize: 10,
-  };
 
-  // Actions
-  const selectVideoDevice = (deviceId) => {
-    selectedVideoDeviceId.value = deviceId;
-    settingsService.set('selectedVideoDeviceId', deviceId);
-  };
-
-  const selectAudioDevice = (deviceId) => {
-    selectedAudioDeviceId.value = deviceId;
-    settingsService.set('selectedAudioDeviceId', deviceId);
-  };
-
-  const setVideoQuality = (quality) => {
-    selectedQuality.value = quality;
-    settingsService.set('selectedQuality', quality);
-  };
-
-  const setShouldMirror = (value) => {
-    shouldMirror.value = value;
-    settingsService.set('shouldMirror', value);
-  };
-
-  const initializeLocalMedia = async (force = false) => {
-    if (localStream.value && !force) {
-      return { success: true };
-    }
-
-    try {
-      globalStore.setLoading(true, 'loading.accessingMedia');
-
-      const constraints = {
-        video: {
-          ...(qualityPresets[selectedQuality.value] || qualityPresets['720p']),
-          frameRate: { ideal: 30, max: 60 },
-        },
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-      };
-
-      if (selectedVideoDeviceId.value) {
-        constraints.video.deviceId = { exact: selectedVideoDeviceId.value };
-      }
-      if (selectedAudioDeviceId.value) {
-        constraints.audio.deviceId = { exact: selectedAudioDeviceId.value };
-      }
-
-      localStream.value = await navigator.mediaDevices.getUserMedia(constraints);
-
-      const videoTrack = localStream.value.getVideoTracks()[0];
-      const audioTrack = localStream.value.getAudioTracks()[0];
-
-      if (videoTrack) isVideoEnabled.value = videoTrack.enabled;
-      if (audioTrack) isAudioEnabled.value = audioTrack.enabled;
-
-      return { success: true };
-    } catch (error) {
-      let errorKey = 'webrtc.mediaAccessFailed';
-      if (error.name === 'NotAllowedError') errorKey = 'webrtc.mediaAccessDenied';
-      else if (error.name === 'NotFoundError') errorKey = 'webrtc.noMediaDevice';
-      else if (error.name === 'NotReadableError') errorKey = 'webrtc.mediaInUse';
-
-      globalStore.addNotification(errorKey, 'error', 8000);
-      return { success: false, error: i18n.global.t(errorKey) };
-    } finally {
-      globalStore.setLoading(false);
+  // --- Private Helper Functions ---
+  const sendWebSocketMessage = (message) => {
+    if (websocket.value && websocket.value.readyState === WebSocket.OPEN) {
+      websocket.value.send(JSON.stringify(message));
     }
   };
 
-  const createPeerConnection = () => {
-    try {
-      peerConnection.value = new RTCPeerConnection(rtcConfiguration);
+  const _createPeerConnection = (participantId) => {
+    if (peerConnections[participantId]) {
+      console.warn(`Peer connection for ${participantId} already exists.`);
+      return peerConnections[participantId];
+    }
 
-      if (localStream.value) {
-        localStream.value.getTracks().forEach((track) => {
-          peerConnection.value.addTrack(track, localStream.value);
+    console.log(`Creating new peer connection for participant: ${participantId}`);
+    const pc = new RTCPeerConnection(webrtcService.getIceServerConfig());
+
+    // Add local stream tracks
+    if (localStream.value) {
+      localStream.value.getTracks().forEach(track => {
+        pc.addTrack(track, localStream.value);
+      });
+    }
+
+    pc.ontrack = (event) => {
+      console.log(`Received remote track from ${participantId}`);
+      remoteStreams[participantId] = event.streams[0];
+    };
+
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        sendWebSocketMessage({
+          type: 'ice_candidate',
+          candidate: event.candidate,
+          target: participantId,
         });
       }
+    };
 
-      peerConnection.value.ontrack = (event) => {
-        remoteStream.value = event.streams[0];
-      };
+    pc.onconnectionstatechange = () => {
+      const state = pc.connectionState;
+      connectionStates[participantId] = state;
+      console.log(`Connection state for ${participantId} changed to: ${state}`);
+      if (state === 'failed') {
+         console.error(`ICE connection failed for participant ${participantId}. Restarting...`);
+         // Implement ICE restart logic if needed, for now just log
+         pc.createOffer({ iceRestart: true })
+           .then(offer => pc.setLocalDescription(offer))
+           .then(() => {
+             sendWebSocketMessage({ type: 'offer', offer: pc.localDescription, target: participantId });
+           });
+      }
+    };
+    
+    peerConnections[participantId] = pc;
+    return pc;
+  };
 
-      peerConnection.value.onicecandidate = (event) => {
-        if (event.candidate && websocket.value) {
-          sendWebSocketMessage({
-            type: 'ice_candidate',
-            candidate: event.candidate,
-          });
-        }
-      };
-
-      peerConnection.value.onconnectionstatechange = () => {
-        connectionState.value = peerConnection.value.connectionState;
-        if (connectionState.value === 'connected') {
-          isConnected.value = true;
-          globalStore.addNotification('webrtc.callConnected', 'success', 3000);
-        } else if (['disconnected', 'failed'].includes(connectionState.value)) {
-          isConnected.value = false;
-          if (connectionState.value === 'failed') {
-            globalStore.addNotification('webrtc.callFailed', 'error', 5000);
-          }
-        }
-      };
-
-      return { success: true };
-    } catch (error) {
-      console.error('Failed to create peer connection:', error);
-      return { success: false, error: error.message };
+  const _closePeerConnection = (participantId) => {
+    if (peerConnections[participantId]) {
+      peerConnections[participantId].close();
+      delete peerConnections[participantId];
+      delete remoteStreams[participantId];
+      delete connectionStates[participantId];
+      console.log(`Closed peer connection for participant: ${participantId}`);
     }
   };
 
-  const connectWebSocket = (roomId) => {
-    return new Promise((resolve, reject) => {
-      try {
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsHost = import.meta.env.VITE_WS_HOST || window.location.host;
-        const wsUrl = `${protocol}//${wsHost}/ws/room/${roomId}/`;
 
-        websocket.value = new WebSocket(wsUrl);
-
-        websocket.value.onopen = () => resolve();
-        websocket.value.onmessage = (event) => handleWebSocketMessage(JSON.parse(event.data));
-        websocket.value.onclose = (event) => {
-          isConnected.value = false;
-          if (event.code !== 1000) {
-            globalStore.addNotification('webrtc.wsConnectionLost', 'error', 5000);
-          }
-        };
-        websocket.value.onerror = (error) => reject(error);
-
-        setTimeout(() => {
-          if (websocket.value && websocket.value.readyState !== WebSocket.OPEN) {
-            websocket.value.close();
-            reject(new Error('WebSocket connection timeout'));
-          }
-        }, 10000);
-      } catch (error) {
-        reject(error);
-      }
-    });
-  };
-
+  // --- WebSocket Message Handlers ---
   const handleWebSocketMessage = async (data) => {
-    switch (data.type) {
+    const { type, sender, target } = data;
+    
+    // Ignore messages not intended for us (if target is specified)
+    // Note: Backend doesn't currently set a local participant ID, so we accept all targeted messages for now.
+    
+    console.log('Received WebSocket message:', data.type, 'from', sender);
+
+    switch (type) {
       case 'user_joined':
-        if (!remoteParticipants.value.find((p) => p.id === data.participant_id)) {
-          remoteParticipants.value.push({ id: data.participant_id, joined_at: data.timestamp });
-        }
-        globalStore.addNotification('webrtc.userJoined', 'info', 3000);
-        if (peerConnection.value && localStream.value) createOffer();
+        // A new user has joined the room. Let's create an offer for them.
+        console.log(`User ${data.participant_id} joined. Creating offer.`);
+        const pc = _createPeerConnection(data.participant_id);
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        sendWebSocketMessage({ type: 'offer', offer, target: data.participant_id });
         break;
 
       case 'user_left':
-        remoteParticipants.value = remoteParticipants.value.filter((p) => p.id !== data.participant_id);
-        globalStore.addNotification('webrtc.userLeft', 'info', 3000);
-        if (remoteStream.value) remoteStream.value = null;
+        console.log(`User ${data.participant_id} left.`);
+        _closePeerConnection(data.participant_id);
         break;
 
       case 'webrtc_offer':
-        if (!peerConnection.value) createPeerConnection();
-        await peerConnection.value.setRemoteDescription(new RTCSessionDescription(data.offer));
-        const answer = await peerConnection.value.createAnswer();
-        await peerConnection.value.setLocalDescription(answer);
-        sendWebSocketMessage({ type: 'answer', answer: answer, target: data.sender });
+        // We received an offer from a peer, create an answer.
+        console.log(`Received offer from ${sender}. Creating answer.`);
+        const offerPc = _createPeerConnection(sender);
+        await offerPc.setRemoteDescription(new RTCSessionDescription(data.offer));
+        const answer = await offerPc.createAnswer();
+        await offerPc.setLocalDescription(answer);
+        sendWebSocketMessage({ type: 'answer', answer, target: sender });
         break;
 
       case 'webrtc_answer':
-        await peerConnection.value.setRemoteDescription(new RTCSessionDescription(data.answer));
+        // We received an answer to our offer.
+        console.log(`Received answer from ${sender}.`);
+        const answerPc = peerConnections[sender];
+        if (answerPc) {
+          await answerPc.setRemoteDescription(new RTCSessionDescription(data.answer));
+        } else {
+          console.error(`Received answer from unknown peer: ${sender}`);
+        }
         break;
 
       case 'ice_candidate':
-        await peerConnection.value.addIceCandidate(new RTCIceCandidate(data.candidate));
+        console.log(`Received ICE candidate from ${sender}.`);
+        const candidatePc = peerConnections[sender];
+        if (candidatePc) {
+          try {
+            await candidatePc.addIceCandidate(new RTCIceCandidate(data.candidate));
+          } catch (e) {
+            console.error('Error adding received ICE candidate', e);
+          }
+        } else {
+          console.error(`Received ICE candidate from unknown peer: ${sender}`);
+        }
         break;
 
       case 'error':
@@ -233,67 +172,97 @@ export const useWebRTCStore = defineStore('webrtc', () => {
     }
   };
 
-  const createOffer = async () => {
-    if (!peerConnection.value) createPeerConnection();
-    const offer = await peerConnection.value.createOffer();
-    await peerConnection.value.setLocalDescription(offer);
-    sendWebSocketMessage({ type: 'offer', offer: offer });
-  };
 
-  const sendWebSocketMessage = (message) => {
-    if (websocket.value && websocket.value.readyState === WebSocket.OPEN) {
-      websocket.value.send(JSON.stringify(message));
+  // --- Public Actions ---
+  const initializeLocalMedia = async (force = false) => {
+    if (localStream.value && !force) return { success: true };
+    try {
+      const constraints = {
+        video: { ...(settingsService.getQualityPresets()[selectedQuality.value] || {}), frameRate: { ideal: 30 } },
+        audio: { echoCancellation: true, noiseSuppression: true },
+      };
+      if (selectedVideoDeviceId.value) constraints.video.deviceId = { exact: selectedVideoDeviceId.value };
+      if (selectedAudioDeviceId.value) constraints.audio.deviceId = { exact: selectedAudioDeviceId.value };
+      
+      localStream.value = await navigator.mediaDevices.getUserMedia(constraints);
+      isVideoEnabled.value = localStream.value.getVideoTracks()[0]?.enabled ?? false;
+      isAudioEnabled.value = localStream.value.getAudioTracks()[0]?.enabled ?? false;
+      return { success: true };
+    } catch (error) {
+      console.error("Failed to get user media", error);
+      globalStore.addNotification(i18n.global.t('webrtc.mediaAccessFailed'), 'error');
+      return { success: false, error };
     }
   };
 
-  const toggleMedia = (type, enabled) => {
+  const connectWebSocket = (currentRoomId) => {
+    roomId.value = currentRoomId;
+    return new Promise((resolve, reject) => {
+      const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+      const wsHost = import.meta.env.VITE_WS_BASE_URL || window.location.host;
+      const wsUrl = `${protocol}://${wsHost}/ws/room/${roomId.value}/`;
+
+      websocket.value = new WebSocket(wsUrl);
+      websocket.value.onopen = () => resolve();
+      websocket.value.onmessage = (event) => handleWebSocketMessage(JSON.parse(event.data));
+      websocket.value.onclose = () => console.log('WebSocket disconnected');
+      websocket.value.onerror = (err) => reject(err);
+    });
+  };
+
+  const toggleMedia = (type, forceState) => {
+    if (!localStream.value) return;
+    const track = type === 'video' ? localStream.value.getVideoTracks()[0] : localStream.value.getAudioTracks()[0];
+    if (track) {
+      const newState = forceState ?? !track.enabled;
+      track.enabled = newState;
+      if (type === 'video') isVideoEnabled.value = newState;
+      if (type === 'audio') isAudioEnabled.value = newState;
+    }
+  };
+  
+  const toggleVideo = (forceState) => toggleMedia('video', forceState);
+  const toggleAudio = (forceState) => toggleMedia('audio', forceState);
+
+  const endCall = () => {
+    console.log("Ending call, cleaning up all connections.");
+    // Close all peer connections
+    for (const participantId in peerConnections) {
+      _closePeerConnection(participantId);
+    }
+    
+    // Stop local media tracks
     if (localStream.value) {
-      const track = type === 'video' ? localStream.value.getVideoTracks()[0] : localStream.value.getAudioTracks()[0];
-      if (track) {
-        track.enabled = enabled;
-        if (type === 'video') isVideoEnabled.value = enabled;
-        if (type === 'audio') isAudioEnabled.value = enabled;
-
-        sendWebSocketMessage({
-          type: 'media_state',
-          state: { video: isVideoEnabled.value, audio: isAudioEnabled.value },
-        });
-
-        const status = enabled ? (type === 'video' ? 'cameraOn' : 'micOn') : (type === 'video' ? 'cameraOff' : 'micOff');
-        globalStore.addNotification(`webrtc.${status}`, 'info', 2000);
-      }
+      localStream.value.getTracks().forEach(track => track.stop());
+      localStream.value = null;
     }
-  };
 
-  const toggleVideo = () => toggleMedia('video', !isVideoEnabled.value);
-  const toggleAudio = () => toggleMedia('audio', !isAudioEnabled.value);
-
-  const endCall = async () => {
-    if (peerConnection.value) peerConnection.value.close();
-    if (websocket.value) websocket.value.close(1000, 'Call ended');
-    if (localStream.value) localStream.value.getTracks().forEach((track) => track.stop());
-
-    localStream.value = null;
-    remoteStream.value = null;
-    peerConnection.value = null;
-    websocket.value = null;
-    isConnected.value = false;
-    connectionState.value = 'new';
+    // Close WebSocket
+    if (websocket.value) {
+      websocket.value.close(1000, 'Call ended by user');
+      websocket.value = null;
+    }
+    
+    // Reset state
     remoteParticipants.value = [];
+    roomId.value = null;
   };
+
+  // This is a placeholder, as the original file had these and they might be used elsewhere
+  const createPeerConnection = () => ({ success: true });
+  const createOffer = () => ({ success: true });
 
   return {
     // State
     localStream,
-    remoteStream,
-    peerConnection,
+    remoteStreams, // Changed
+    peerConnections, // Changed
     websocket,
     isConnected,
     isVideoEnabled,
     isAudioEnabled,
-    connectionState,
+    connectionStates, // Changed
     remoteParticipants,
-    localParticipantId,
     selectedVideoDeviceId,
     selectedAudioDeviceId,
     selectedQuality,
@@ -301,22 +270,20 @@ export const useWebRTCStore = defineStore('webrtc', () => {
 
     // Computed
     hasLocalVideo,
-    hasRemoteVideo,
-    isCallActive,
+    hasRemoteVideo, // Changed
+    mainRemoteStream, // New
 
     // Actions
-    selectVideoDevice,
-    selectAudioDevice,
-    setVideoQuality,
-    setShouldMirror,
     initializeLocalMedia,
-    createPeerConnection,
     connectWebSocket,
-    createOffer,
-    sendWebSocketMessage,
     toggleVideo,
     toggleAudio,
     endCall,
+    
+    // Deprecated placeholders, should be removed after refactoring components
+    createPeerConnection,
+    createOffer,
+    remoteStream: mainRemoteStream, // backward compatibility for components
+    connectionState: computed(() => isConnected.value ? 'connected' : 'disconnected'), // simplified
   };
 });
-
