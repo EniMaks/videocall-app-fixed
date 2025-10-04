@@ -42,16 +42,16 @@ videocall-app/
 │   │   ├── components/     # Vue компоненты
 │   │   ├── assets/         # Статические ресурсы
 │   │   └── style.css       # Глобальные стили
-├── videocall-backend/      # Node.js бэкенд
+├── backend/                # Django бэкенд
 ├── docs/                   # Документация
 └── README.md               # Главная документация
 ```
 
 ### Технологический стек
 - **Frontend**: Vue.js 3, Tailwind CSS, WebRTC
-- **Backend**: Node.js, Socket.IO
+- **Backend**: Django, Django Channels, WebRTC
 - **Build Tool**: Vite
-- **Package Manager**: npm
+- **Package Manager**: npm, pip
 
 ## Особенности версии 2.0.0
 
@@ -70,27 +70,7 @@ videocall-app/
 
 ## Разработка
 
-### Запуск проекта
-```bash
-# Установка зависимостей
-cd videocall-frontend
-npm install
-
-# Запуск dev сервера
-npm run dev
-
-# Сборка для продакшена
-npm run build
-```
-
-### Тестирование
-```bash
-# Запуск тестов
-npm run test
-
-# Тестирование на мобильных устройствах
-npm run dev -- --host
-```
+Подробные инструкции по запуску проекта для разработки (как с Docker, так и без) находятся в основном файле [README.md](../README.md) в разделе 'Быстрый старт'.
 
 ## Контрибьюция
 

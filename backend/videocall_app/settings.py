@@ -6,22 +6,22 @@ from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Security settings
-SECRET_KEY = config('SECRET_KEY', default='your-secret-key-here-change-in-production')
-DEBUG = config('DEBUG', default=False, cast=bool)
+# --- Environment Configuration ---
+# Set DJANGO_ENV to 'development' in your local .env file
+# On the server, this will default to 'production'
+DJANGO_ENV = config('DJANGO_ENV', default='production')
+IS_DEVELOPMENT = (DJANGO_ENV == 'development')
 
-# ALLOWED_HOSTS - только ваши настоящие домены
-allowed_hosts_default = 'videocall.allisneed.ru,www.videocall.allisneed.ru,localhost,127.0.0.1'
+# --- Core Django Settings ---
+SECRET_KEY = config('SECRET_KEY', default='a-secure-default-secret-key-for-development')
+DEBUG = config('DEBUG', default=IS_DEVELOPMENT, cast=bool)
+
+allowed_hosts_default = 'localhost,127.0.0.1'
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default=allowed_hosts_default).split(',')
-
-# Убираем пустые строки и пробелы
-ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS if host.strip()]
-
-# В DEBUG режиме разрешаем localhost для разработки
-if DEBUG:
+if IS_DEVELOPMENT:
     ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', '0.0.0.0'])
 
-# Application definition
+# --- Application Definition ---
 DJANGO_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -45,6 +45,10 @@ LOCAL_APPS = [
     'apps.authentication',
 ]
 
+# In development, we disable ratelimit as it requires a shared cache
+if IS_DEVELOPMENT:
+    THIRD_PARTY_APPS.remove('django_ratelimit')
+
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
@@ -59,6 +63,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'videocall_app.urls'
+WSGI_APPLICATION = 'videocall_app.wsgi.application'
+ASGI_APPLICATION = 'videocall_app.asgi.application'
 
 TEMPLATES = [
     {
@@ -76,79 +82,89 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'videocall_app.wsgi.application'
-ASGI_APPLICATION = 'videocall_app.asgi.application'
 
-# Database configuration
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='videocall_db'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default=''),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5432'),
-    }
-}
+# --- Database, Cache, and Channels (Environment-Specific) ---
 
-# Redis configuration
-REDIS_URL = config('REDIS_URL', default='redis://localhost:6379/0')
-
-# Channels configuration for WebSockets
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            'hosts': [REDIS_URL],
-        },
-    },
-}
-
-# Cache configuration
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': REDIS_URL,
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+if IS_DEVELOPMENT:
+    # --- Development Settings ---
+    print("🚀 Running in DEVELOPMENT mode")
+    # Use simple SQLite database
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
-}
+    # Use in-memory layers for channels and cache
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer"
+        }
+    }
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'unique-snowflake',
+        }
+    }
+else:
+    # --- Production Settings ---
+    print("🔒 Running in PRODUCTION mode")
+    # Use PostgreSQL database
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('DB_NAME'),
+            'USER': config('DB_USER'),
+            'PASSWORD': config('DB_PASSWORD'),
+            'HOST': config('DB_HOST'),
+            'PORT': config('DB_PORT', cast=int),
+        }
+    }
+    # Use Redis for channels and cache
+    REDIS_URL = config('REDIS_URL')
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': { 'hosts': [REDIS_URL] },
+        },
+    }
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': REDIS_URL,
+            'OPTIONS': { 'CLIENT_CLASS': 'django_redis.client.DefaultClient' }
+        }
+    }
 
-# Session configuration
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-SESSION_CACHE_ALIAS = 'default'
-SESSION_COOKIE_AGE = 86400  # 24 hours
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_SAVE_EVERY_REQUEST = True
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SECURE = not DEBUG  # Use secure cookies in production
-SESSION_COOKIE_SAMESITE = 'Lax'
+# --- CORS and CSRF Settings ---
 
-# CSRF Configuration
-CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript to read CSRF token
-CSRF_COOKIE_SECURE = not DEBUG  # Use secure cookies in production
-CSRF_COOKIE_SAMESITE = 'Lax'
-CSRF_TRUSTED_ORIGINS = [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-]
+CORS_ALLOW_CREDENTIALS = True
 
-if not DEBUG:
-    # Add your production domains
-    CSRF_TRUSTED_ORIGINS.extend([
-        'https://videocall.allisneed.ru',
-        'https://www.videocall.allisneed.ru',
-    ])
+if IS_DEVELOPMENT:
+    # In development, allow any origin for simplicity
+    CORS_ALLOW_ALL_ORIGINS = True
+    CSRF_TRUSTED_ORIGINS = [
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'http://localhost:5173',
+        'http://127.0.0.1:5173',
+    ]
+else:
+    # In production, be very specific
+    CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='').split(',')
+    CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='').split(',')
 
-# REST Framework configuration
+
+# --- REST Framework Settings ---
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',  # Changed to allow custom auth
+        'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.AnonRateThrottle',
@@ -160,39 +176,47 @@ REST_FRAMEWORK = {
     }
 }
 
-# CORS settings
-CORS_ALLOWED_ORIGINS = config(
-    'CORS_ALLOWED_ORIGINS',
-    default='http://localhost:3000,http://127.0.0.1:3000'
-).split(',')
-
-CORS_ALLOW_CREDENTIALS = True
+# In development, disable throttling
+if IS_DEVELOPMENT:
+    REST_FRAMEWORK['DEFAULT_THROTTLE_CLASSES'] = []
 
 
-# WebSocket origins for Channels
-ALLOWED_HOSTS_INCLUDE_WEBSOCKET = True
+# --- Other Settings ---
 
-# Additional CORS headers for development
-if DEBUG:
-    CORS_ALLOW_HEADERS = [
-        'accept',
-        'accept-encoding',
-        'authorization',
-        'content-type',
-        'dnt',
-        'origin',
-        'user-agent',
-        'x-csrftoken',
-        'x-requested-with',
-    ]
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'default'
+SESSION_COOKIE_AGE = 86400
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = not IS_DEVELOPMENT
+SESSION_COOKIE_SAMESITE = 'Lax'
 
-# Django Ratelimit settings
-RATELIMIT_USE_CACHE = 'default'
-RATELIMIT_ENABLE = True
+LANGUAGE_CODE = 'en-us'
+TIME_ZONE = 'UTC'
+USE_I18N = True
+USE_TZ = True
 
-# В файле backend/videocall_app/settings.py замените секцию LOGGING на:
+STATIC_URL = '/static/'
+STATIC_ROOT = '/staticfiles'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Logging configuration
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'SIGNING_KEY': SECRET_KEY,
+    'ALGORITHM': 'HS256',
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': None,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'TOKEN_TYPE_CLAIM': 'token_type',
+}
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -212,103 +236,4 @@ LOGGING = {
         'handlers': ['console'],
         'level': 'INFO',
     },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'apps.authentication': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-        'apps.rooms': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propagate': False,
-        },
-    },
-}
-
-# Internationalization
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
-USE_I18N = True
-USE_TZ = True
-
-# Static files (CSS, JavaScript, Images)
-STATIC_URL = '/static/'
-STATIC_ROOT = '/staticfiles'
-
-# Additional locations of static files
-STATICFILES_DIRS = []
-if (BASE_DIR / 'static').exists():
-    STATICFILES_DIRS.append(BASE_DIR / 'static')
-
-# Static files finders
-STATICFILES_FINDERS = [
-    'django.contrib.staticfiles.finders.FileSystemFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-]
-
-# Media files
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
-# Application-specific settings
-ROOM_EXPIRY_HOURS = 24
-MAX_PARTICIPANTS_PER_ROOM = 2
-SHORT_CODE_LENGTH = 6
-
-# Default primary key field type
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# Security settings for production
-if not DEBUG:
-    # Trust proxy headers from nginx
-    USE_X_FORWARDED_HOST = True
-    USE_X_FORWARDED_PORT = True
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
-    # ВАЖНО: НЕ ВКЛЮЧАЕМ принудительное перенаправление на HTTPS
-    # так как это делает nginx
-    SECURE_SSL_REDIRECT = False
-
-    # Остальные настройки безопасности
-    SECURE_BROWSER_XSS_FILTER = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_SECONDS = 31536000
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-
-    # Дополнительные заголовки безопасности
-    SECURE_REFERRER_POLICY = 'same-origin'
-
-# Simple JWT settings
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
-    'ROTATE_REFRESH_TOKENS': False,
-    'BLACKLIST_AFTER_ROTATION': True,
-
-    'ALGORITHM': 'HS256',
-    'SIGNING_KEY': SECRET_KEY,
-    'VERIFYING_KEY': None,
-    'AUDIENCE': None,
-    'ISSUER': None,
-
-    'AUTH_HEADER_TYPES': ('Bearer',),
-    'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',
-
-    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
-    'TOKEN_TYPE_CLAIM': 'token_type',
-
-    'JTI_CLAIM': 'jti',
-
-    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
-    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
-    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
