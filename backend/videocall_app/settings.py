@@ -154,6 +154,8 @@ else:
     # In production, be very specific
     CORS_ALLOWED_ORIGINS = [origin for origin in config('CORS_ALLOWED_ORIGINS', default='').split(',') if origin]
     CSRF_TRUSTED_ORIGINS = [origin for origin in config('CSRF_TRUSTED_ORIGINS', default='').split(',') if origin]
+    if not CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 
 
 # --- REST Framework Settings ---
@@ -189,8 +191,7 @@ SESSION_COOKIE_AGE = 86400
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SECURE = False
-CSRF_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = not IS_DEVELOPMENT
 SESSION_COOKIE_SAMESITE = 'Lax'
 
 LANGUAGE_CODE = 'en-us'
