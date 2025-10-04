@@ -4,20 +4,29 @@ export const webrtcService = {
    * Get STUN/TURN server configuration
    */
   getIceServerConfig() {
-    return {
-      iceServers: [
-        { urls: 'stun:stun.l.google.com:19302' },
-        { urls: 'stun:stun1.l.google.com:19302' },
-        { urls: 'stun:stun2.l.google.com:19302' },
-        // Add TURN servers for production
-        // {
-        //   urls: 'turn:your-turn-server.com:3478',
-        //   username: 'username',
-        //   credential: 'password'
-        // }
-      ],
-      iceCandidatePoolSize: 10,
+    const iceServers = [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun2.l.google.com:19302' },
+    ];
+
+    const turnUrl = import.meta.env.VITE_TURN_URL;
+    const turnUsername = import.meta.env.VITE_TURN_USERNAME;
+    const turnCredential = import.meta.env.VITE_TURN_CREDENTIAL;
+
+    if (turnUrl) {
+      const turnServer = { urls: turnUrl };
+      if (turnUsername && turnCredential) {
+        turnServer.username = turnUsername;
+        turnServer.credential = turnCredential;
+      }
+      iceServers.push(turnServer);
     }
+
+    return {
+      iceServers,
+      iceCandidatePoolSize: 10,
+    };
   },
 
   /**
