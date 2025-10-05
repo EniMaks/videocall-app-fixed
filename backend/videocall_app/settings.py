@@ -16,7 +16,7 @@ IS_DEVELOPMENT = (DJANGO_ENV == 'development')
 SECRET_KEY = config('SECRET_KEY', default='a-secure-default-secret-key-for-development')
 DEBUG = config('DEBUG', default=IS_DEVELOPMENT, cast=bool)
 
-allowed_hosts_default = 'localhost,127.0.0.1'
+allowed_hosts_default = 'videocall.allisneed.ru,www.videocall.allisneed.ru,localhost,127.0.0.1'
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default=allowed_hosts_default).split(',')
 if IS_DEVELOPMENT:
     ALLOWED_HOSTS.extend(['localhost', '127.0.0.1', '0.0.0.0'])
