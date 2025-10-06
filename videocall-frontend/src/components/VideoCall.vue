@@ -282,7 +282,7 @@
 
     <!-- Controls -->
     <div :class="[
-      'bg-gradient-to-t from-gray-200 to-gray-100 dark:from-gray-900 dark:to-gray-800 py-4 safe-area-inset transition-colors border-t border-gray-300 dark:border-gray-700',
+      'bg-gradient-to-t from-gray-200 to-gray-100 dark:from-gray-900 dark:to-gray-800 py-4 transition-colors border-t border-gray-300 dark:border-gray-700',
       { 'mobile-controls': isMobileView },
       { 'hidden': isFullscreenMode && shouldHideUI }
     ]">
@@ -1173,9 +1173,15 @@ onUnmounted(async () => {
   .mobile-header {
     padding: 12px 16px;
   }
-  
+
   .mobile-controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
     padding: 12px 16px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
   }
 }
 
