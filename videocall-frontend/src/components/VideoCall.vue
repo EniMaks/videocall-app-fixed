@@ -304,7 +304,7 @@
             webrtcStore.isAudioEnabled ? 'control-button-active' : 'control-button-danger',
           ]"
           :title="webrtcStore.isAudioEnabled ? $t('videoCall.muteMic') : $t('videoCall.unmuteMic')"
-          @click="webrtcStore.toggleAudio"
+          @click="webrtcStore.toggleAudio()"
         >
           <svg
             v-if="webrtcStore.isAudioEnabled"
@@ -337,7 +337,7 @@
             webrtcStore.isVideoEnabled ? 'control-button-active' : 'control-button-danger',
           ]"
           :title="webrtcStore.isVideoEnabled ? $t('videoCall.turnOffCam') : $t('videoCall.turnOnCam')"
-          @click="webrtcStore.toggleVideo"
+          @click="webrtcStore.toggleVideo()"
         >
           <svg
             v-if="webrtcStore.isVideoEnabled"
