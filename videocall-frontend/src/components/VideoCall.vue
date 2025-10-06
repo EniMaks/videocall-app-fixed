@@ -304,7 +304,7 @@
             webrtcStore.isAudioEnabled ? 'control-button-active' : 'control-button-danger',
           ]"
           :title="webrtcStore.isAudioEnabled ? $t('videoCall.muteMic') : $t('videoCall.unmuteMic')"
-          @click="webrtcStore.toggleAudio()"
+          @click="() => { console.log(`[VideoCall] Toggle audio clicked, current isAudioEnabled=${webrtcStore.isAudioEnabled}`); webrtcStore.toggleAudio(); }"
         >
           <svg
             v-if="webrtcStore.isAudioEnabled"
@@ -337,7 +337,7 @@
             webrtcStore.isVideoEnabled ? 'control-button-active' : 'control-button-danger',
           ]"
           :title="webrtcStore.isVideoEnabled ? $t('videoCall.turnOffCam') : $t('videoCall.turnOnCam')"
-          @click="webrtcStore.toggleVideo()"
+          @click="() => { console.log(`[VideoCall] Toggle video clicked, current isVideoEnabled=${webrtcStore.isVideoEnabled}`); webrtcStore.toggleVideo(); }"
         >
           <svg
             v-if="webrtcStore.isVideoEnabled"
@@ -796,9 +796,11 @@ const detectMobileView = () => {
 }
 
 const onFullscreenChange = (isFullscreen) => {
+  console.log(`[VideoCall] onFullscreenChange: isFullscreen=${isFullscreen}, old isFullscreenMode=${isFullscreenMode.value}, old shouldHideUI=${shouldHideUI.value}`)
   isFullscreenMode.value = isFullscreen
   // Всегда оставляем UI видимым в полноэкранном режиме
   shouldHideUI.value = false
+  console.log(`[VideoCall] After change: isFullscreenMode=${isFullscreenMode.value}, shouldHideUI=${shouldHideUI.value}`)
 }
 
 const setContainerHeight = () => {
@@ -998,6 +1000,20 @@ watch(
     })
   },
   { immediate: true },
+)
+
+watch(
+  () => isFullscreenMode.value,
+  (newVal) => {
+    console.log(`[VideoCall] isFullscreenMode changed to: ${newVal}`)
+  }
+)
+
+watch(
+  () => shouldHideUI.value,
+  (newVal) => {
+    console.log(`[VideoCall] shouldHideUI changed to: ${newVal}`)
+  }
 )
 
 // Update call duration

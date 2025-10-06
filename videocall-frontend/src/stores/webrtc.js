@@ -228,7 +228,8 @@ export const useWebRTCStore = defineStore('webrtc', () => {
       track.enabled = newState;
       if (type === 'video') isVideoEnabled.value = newState;
       if (type === 'audio') isAudioEnabled.value = newState;
-      console.log(`[WebRTC] ${type} state updated: ${isVideoEnabled.value}/${isAudioEnabled.value}`);
+      console.log(`[WebRTC] ${type} state updated: video=${isVideoEnabled.value}, audio=${isAudioEnabled.value}`);
+      console.log(`[WebRTC] hasLocalVideo: ${hasLocalVideo.value}, hasRemoteVideo: ${hasRemoteVideo.value}`);
     } else {
       console.warn(`[WebRTC] No ${type} track found to toggle`);
     }
