@@ -247,6 +247,27 @@ export const useWebRTCStore = defineStore('webrtc', () => {
     roomId.value = null;
   };
 
+  // Settings actions
+  const selectVideoDevice = (deviceId) => {
+    selectedVideoDeviceId.value = deviceId;
+    settingsService.set('selectedVideoDeviceId', deviceId);
+  };
+
+  const selectAudioDevice = (deviceId) => {
+    selectedAudioDeviceId.value = deviceId;
+    settingsService.set('selectedAudioDeviceId', deviceId);
+  };
+
+  const setVideoQuality = (quality) => {
+    selectedQuality.value = quality;
+    settingsService.set('selectedQuality', quality);
+  };
+
+  const setShouldMirror = (value) => {
+    shouldMirror.value = value;
+    settingsService.set('shouldMirror', value);
+  };
+
   // Deprecated placeholders
   const createPeerConnection = () => ({ success: true });
   const createOffer = () => ({ success: true });
@@ -263,11 +284,19 @@ export const useWebRTCStore = defineStore('webrtc', () => {
     hasLocalVideo,
     hasRemoteVideo,
     mainRemoteStream,
+    selectedVideoDeviceId,
+    selectedAudioDeviceId,
+    selectedQuality,
+    shouldMirror,
     initializeLocalMedia,
     connectWebSocket,
     toggleVideo,
     toggleAudio,
     endCall,
+    selectVideoDevice,
+    selectAudioDevice,
+    setVideoQuality,
+    setShouldMirror,
     createPeerConnection, // Deprecated
     createOffer, // Deprecated
     remoteStream: mainRemoteStream,

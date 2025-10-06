@@ -25,7 +25,7 @@ export const settingsService = {
    * Save all settings
    */
   saveSettings(settings) {
-    storage.setItem(SETTINGS_KEY, settings);
+    localStorageService.setItem(SETTINGS_KEY, settings);
   },
 
   /**
