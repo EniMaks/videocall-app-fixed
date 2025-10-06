@@ -170,7 +170,11 @@ export const useWebRTCStore = defineStore('webrtc', () => {
 
   // --- Public Actions ---
   const initializeLocalMedia = async (force = false) => {
-    if (localStream.value && !force) return { success: true };
+    console.log('[WebRTC] Initializing local media, force:', force);
+    if (localStream.value && !force) {
+      console.log('[WebRTC] Local media already initialized');
+      return { success: true };
+    }
     try {
       const constraints = {
         video: { ...(qualityPresets[selectedQuality.value] || {}), frameRate: { ideal: 30 } },
@@ -178,10 +182,13 @@ export const useWebRTCStore = defineStore('webrtc', () => {
       };
       if (selectedVideoDeviceId.value) constraints.video.deviceId = { exact: selectedVideoDeviceId.value };
       if (selectedAudioDeviceId.value) constraints.audio.deviceId = { exact: selectedAudioDeviceId.value };
-      
+
+      console.log('[WebRTC] Requesting user media with constraints:', constraints);
       localStream.value = await navigator.mediaDevices.getUserMedia(constraints);
+      console.log('[WebRTC] Local stream obtained:', localStream.value ? 'yes' : 'no');
       isVideoEnabled.value = localStream.value.getVideoTracks()[0]?.enabled ?? false;
       isAudioEnabled.value = localStream.value.getAudioTracks()[0]?.enabled ?? false;
+      console.log('[WebRTC] Initial states - Video enabled:', isVideoEnabled.value, 'Audio enabled:', isAudioEnabled.value);
       return { success: true };
     } catch (error) {
       console.error("Failed to get user media", error);
@@ -215,13 +222,22 @@ export const useWebRTCStore = defineStore('webrtc', () => {
   };
 
   const toggleMedia = (type, forceState) => {
-    if (!localStream.value) return;
+    console.log(`[WebRTC] Toggling ${type}, localStream:`, localStream.value ? 'exists' : 'null');
+    if (!localStream.value) {
+      console.warn(`[WebRTC] Cannot toggle ${type}: localStream is null`);
+      return;
+    }
     const track = type === 'video' ? localStream.value.getVideoTracks()[0] : localStream.value.getAudioTracks()[0];
+    console.log(`[WebRTC] ${type} track:`, track ? 'found' : 'not found');
     if (track) {
       const newState = forceState ?? !track.enabled;
+      console.log(`[WebRTC] Setting ${type} enabled to: ${newState}`);
       track.enabled = newState;
       if (type === 'video') isVideoEnabled.value = newState;
       if (type === 'audio') isAudioEnabled.value = newState;
+      console.log(`[WebRTC] ${type} state updated: ${isVideoEnabled.value}/${isAudioEnabled.value}`);
+    } else {
+      console.warn(`[WebRTC] No ${type} track found to toggle`);
     }
   };
   
