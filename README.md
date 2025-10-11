@@ -195,6 +195,73 @@
     ```
     *В консоли появится адрес, по которому доступен фронтенд (обычно `http://localhost:5173`).*
 
+#### 3.5. Настройка TURN сервера (рекомендуется)
+
+Для полной функциональности WebRTC в локальной разработке рекомендуется запустить TURN сервер. Без него видеозвонки могут не работать через NAT/firewall.
+
+##### Вариант 1: Docker (рекомендуется для всех ОС)
+
+Запустите Coturn в Docker контейнере:
+
+```bash
+docker run -d --name coturn \
+  -p 3478:3478/tcp -p 3478:3478/udp -p 49152-49251:49152-49251/udp \
+  -v $(pwd)/coturn/turnserver.conf:/etc/coturn/turnserver.conf:ro \
+  coturn/coturn \
+  -c /etc/coturn/turnserver.conf --user=turnuser:supersecretturnpassword
+```
+
+##### Вариант 2: Нативная установка
+
+**Linux (Ubuntu/Debian):**
+```bash
+sudo apt update
+sudo apt install coturn
+```
+
+**Windows (с помощью Chocolatey):**
+```powershell
+# Установите Chocolatey, если не установлен
+# choco install coturn
+# Или скачайте бинарники с https://github.com/coturn/coturn/releases
+```
+
+**macOS (с помощью Homebrew):**
+```bash
+brew install coturn
+```
+
+2.  **Запустите TURN сервер** (в четвертом терминале):
+
+**Linux/macOS:**
+```bash
+# Рекомендуемый способ - с помощью скрипта
+./start-turn-server.sh
+
+# Или вручную
+turnserver -c coturn/turnserver.conf --user=turnuser:supersecretturnpassword
+```
+
+**Windows (PowerShell):**
+```powershell
+# Рекомендуемый способ - с помощью скрипта
+.\start-turn-server.ps1
+
+# Или вручную
+turnserver -c coturn/turnserver.conf --user=turnuser:supersecretturnpassword
+# Или укажите полный путь к бинарнику
+# C:\path\to\turnserver.exe -c coturn/turnserver.conf --user=turnuser:supersecretturnpassword
+```
+
+*TURN сервер будет доступен на порту 3478.*
+
+3.  **Обновите переменные окружения фронтенда** в `videocall-frontend/.env`:
+    ```
+    VITE_TURN_URL=turn:127.0.0.1:3478
+    VITE_TURN_USERNAME=turnuser
+    VITE_TURN_CREDENTIAL=supersecretturnpassword
+    ```
+
 #### 4. Создание пользователя
 
 1.  Откройте **третий терминал**.
