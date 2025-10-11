@@ -833,6 +833,10 @@ const startDrag = (event) => {
   dragStart.value = { x: clientX, y: clientY }
   dragStartElement.value = { x: localVideoPosition.value.x, y: localVideoPosition.value.y }
   
+  // Improve responsiveness by adding specific styles during drag
+  const localVideoElement = event.currentTarget
+  localVideoElement.style.transition = 'none' // Remove transition for immediate response
+  
   // Add event listeners
   document.addEventListener('mousemove', onDrag)
   document.addEventListener('touchmove', onDrag, { passive: false })
@@ -851,15 +855,15 @@ const onDrag = (event) => {
   const deltaX = clientX - dragStart.value.x
   const deltaY = clientY - dragStart.value.y
   
-  // Calculate new position
+  // Calculate new position with improved responsiveness
   let newX = dragStartElement.value.x + deltaX
   let newY = dragStartElement.value.y + deltaY
   
-  // Boundary constraints (allow positioning to the very edges)
+  // Boundary constraints (allow positioning to the very edges including top and bottom)
   const headerHeight = 60 // As per specification
   const controlsHeight = 70 // As per specification
   const videoContainer = document.querySelector('.flex-1.relative')
-  const containerRect = videoContainer ? videoContainer.getBoundingClientRect() : { width: window.innerWidth, height: window.innerHeight - headerHeight - controlsHeight }
+  const containerRect = videoContainer ? videoContainer.getBoundingClientRect() : { width: window.innerWidth, height: window.innerHeight }
   
   // Constrain to video container boundaries (no padding/margin)
   const minX = 0
@@ -876,6 +880,12 @@ const onDrag = (event) => {
 const stopDrag = () => {
   isDragging.value = false
   
+  // Restore transition after drag
+  const localVideoElement = document.querySelector('.local-video-draggable')
+  if (localVideoElement) {
+    localVideoElement.style.transition = '' // Restore default transition
+  }
+  
   // Remove event listeners
   document.removeEventListener('mousemove', onDrag)
   document.removeEventListener('touchmove', onDrag)
@@ -885,6 +895,7 @@ const stopDrag = () => {
 
 const startResize = (event) => {
   event.stopPropagation()
+  event.preventDefault() // Prevent default to ensure resize works on Windows 11
   isResizing.value = true
   
   const clientX = event.touches ? event.touches[0].clientX : event.clientX
@@ -895,6 +906,12 @@ const startResize = (event) => {
     y: clientY,
     width: localVideoDimensions.value.width,
     height: localVideoDimensions.value.height
+  }
+  
+  // Improve responsiveness by adding specific styles during resize
+  const localVideoElement = event.currentTarget.closest('.local-video-draggable')
+  if (localVideoElement) {
+    localVideoElement.style.transition = 'none' // Remove transition for immediate response
   }
   
   // Add event listeners
@@ -939,6 +956,12 @@ const onResize = (event) => {
 const stopResize = () => {
   isResizing.value = false
   
+  // Restore transition after resize
+  const localVideoElement = document.querySelector('.local-video-draggable')
+  if (localVideoElement) {
+    localVideoElement.style.transition = '' // Restore default transition
+  }
+  
   // Remove event listeners
   document.removeEventListener('mousemove', onResize)
   document.removeEventListener('touchmove', onResize)
@@ -959,6 +982,26 @@ const setContainerHeight = () => {
     callContainer.value.style.height = `${window.innerHeight*0.8}px`;
   }
 };
+
+const handleWindowResize = () => {
+  // Adjust local video position if it's outside the new boundaries
+  const headerHeight = 60
+  const controlsHeight = 70
+  const videoContainer = document.querySelector('.flex-1.relative')
+  const containerRect = videoContainer ? videoContainer.getBoundingClientRect() : { width: window.innerWidth, height: window.innerHeight }
+  
+  // Constrain to video container boundaries (no padding/margin, allow touching edges)
+  const minX = 0
+  const minY = headerHeight
+  const maxX = containerRect.width - localVideoDimensions.value.width
+  const maxY = containerRect.height - localVideoDimensions.value.height - controlsHeight
+  
+  // Adjust position if needed
+  let newX = Math.max(minX, Math.min(maxX, localVideoPosition.value.x))
+  let newY = Math.max(minY, Math.min(maxY, localVideoPosition.value.y))
+  
+  localVideoPosition.value = { x: newX, y: newY }
+}
 
 const initializeCall = async () => {
   const roomId = route.params.roomId
@@ -1121,26 +1164,6 @@ const startStatsMonitoring = () => {
   }
 }
 
-const handleWindowResize = () => {
-  // Adjust local video position if it's outside the new boundaries
-  const headerHeight = 60
-  const controlsHeight = 70
-  const videoContainer = document.querySelector('.flex-1.relative')
-  const containerRect = videoContainer ? videoContainer.getBoundingClientRect() : { width: window.innerWidth, height: window.innerHeight - headerHeight - controlsHeight }
-  
-  // Constrain to video container boundaries (no padding/margin)
-  const minX = 0
-  const minY = headerHeight
-  const maxX = containerRect.width - localVideoDimensions.value.width
-  const maxY = containerRect.height - localVideoDimensions.value.height - controlsHeight
-  
-  // Adjust position if needed
-  let newX = Math.max(minX, Math.min(maxX, localVideoPosition.value.x))
-  let newY = Math.max(minY, Math.min(maxY, localVideoPosition.value.y))
-  
-  localVideoPosition.value = { x: newX, y: newY }
-}
-
 // Watch for stream changes
 watch(
   () => webrtcStore.localStream,
@@ -1298,20 +1321,30 @@ const resetLocalVideo = () => {
 .dragging {
   cursor: move !important;
   z-index: 1000 !important;
+  transition: none !important; /* Remove transition during drag for better responsiveness */
 }
 
 .resizing {
   cursor: se-resize !important;
   z-index: 1000 !important;
+  transition: none !important; /* Remove transition during resize for better responsiveness */
 }
 
 .local-video-draggable {
   touch-action: none;
+  transition: all 0.2s ease; /* Keep smooth transition when not dragging/resizing */
 }
 
 .resize-handle {
   z-index: 30;
   pointer-events: auto;
+  /* Ensure the resize handle is properly clickable on Windows 11 */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .resize-handle svg {
