@@ -987,14 +987,23 @@ const handleWindowResize = () => {
   // Adjust local video position if it's outside the new boundaries
   const headerHeight = 60
   const controlsHeight = 70
-  const videoContainer = document.querySelector('.flex-1.relative')
-  const containerRect = videoContainer ? videoContainer.getBoundingClientRect() : { width: window.innerWidth, height: window.innerHeight }
   
-  // Constrain to video container boundaries (no padding/margin, allow touching edges)
-  const minX = 0
-  const minY = headerHeight
-  const maxX = containerRect.width - localVideoDimensions.value.width
-  const maxY = containerRect.height - localVideoDimensions.value.height - controlsHeight
+  // Get the correct video container (use the direct parent of the local video)
+  const localVideoElement = document.querySelector('.local-video-draggable')
+  const videoContainer = localVideoElement ? localVideoElement.closest('.flex-1.relative') : document.querySelector('.flex-1.relative')
+  
+  const containerRect = videoContainer ? videoContainer.getBoundingClientRect() : { 
+    width: window.innerWidth, 
+    height: window.innerHeight - headerHeight - controlsHeight,
+    top: headerHeight,
+    left: 0
+  }
+  
+  // Constrain to video container boundaries (allow touching edges exactly)
+  const minX = containerRect.left
+  const minY = containerRect.top
+  const maxX = containerRect.left + containerRect.width - localVideoDimensions.value.width
+  const maxY = containerRect.top + containerRect.height - localVideoDimensions.value.height
   
   // Adjust position if needed
   let newX = Math.max(minX, Math.min(maxX, localVideoPosition.value.x))
