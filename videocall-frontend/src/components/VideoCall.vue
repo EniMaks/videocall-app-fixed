@@ -659,8 +659,8 @@ const connectingMessage = ref(t('loading.connectingToRoom'))
 const connectingSubMessage = ref(t('loading.preparingCall'))
 
 // Draggable and resizable state for local video
-const localVideoPosition = ref({ x: window.innerWidth - 200, y: 150 })
-const localVideoDimensions = ref({ width: 192, height: 144 }) // 4:3 aspect ratio
+const localVideoPosition = ref({ x: window.innerWidth - 170, y: 100 })
+const localVideoDimensions = ref({ width: 160, height: 120 }) // 4:3 aspect ratio (smaller default size)
 const isDragging = ref(false)
 const isResizing = ref(false)
 const dragStart = ref({ x: 0, y: 0 })
@@ -855,17 +855,17 @@ const onDrag = (event) => {
   let newX = dragStartElement.value.x + deltaX
   let newY = dragStartElement.value.y + deltaY
   
-  // Boundary constraints (respecting UI boundaries as per specification)
+  // Boundary constraints (allow positioning to the very edges)
   const headerHeight = 60 // As per specification
   const controlsHeight = 70 // As per specification
   const videoContainer = document.querySelector('.flex-1.relative')
   const containerRect = videoContainer ? videoContainer.getBoundingClientRect() : { width: window.innerWidth, height: window.innerHeight - headerHeight - controlsHeight }
   
-  // Constrain to video container boundaries with padding
-  const minX = 10
-  const minY = headerHeight + 10
-  const maxX = containerRect.width - localVideoDimensions.value.width - 10
-  const maxY = containerRect.height - localVideoDimensions.value.height - controlsHeight - 10
+  // Constrain to video container boundaries (no padding/margin)
+  const minX = 0
+  const minY = headerHeight
+  const maxX = containerRect.width - localVideoDimensions.value.width
+  const maxY = containerRect.height - localVideoDimensions.value.height - controlsHeight
   
   newX = Math.max(minX, Math.min(maxX, newX))
   newY = Math.max(minY, Math.min(maxY, newY))
@@ -928,8 +928,8 @@ const onResize = (event) => {
     newWidth = (newHeight / 3) * 4
   }
   
-  // Apply minimum and maximum size constraints
-  newWidth = Math.max(120, Math.min(400, newWidth))
+  // Apply minimum and maximum size constraints (smaller minimum size)
+  newWidth = Math.max(80, Math.min(400, newWidth)) // Reduced minimum from 120 to 80
   newHeight = (newWidth / 4) * 3
   
   // Update dimensions
@@ -1128,11 +1128,11 @@ const handleWindowResize = () => {
   const videoContainer = document.querySelector('.flex-1.relative')
   const containerRect = videoContainer ? videoContainer.getBoundingClientRect() : { width: window.innerWidth, height: window.innerHeight - headerHeight - controlsHeight }
   
-  // Constrain to video container boundaries with padding
-  const minX = 10
-  const minY = headerHeight + 10
-  const maxX = containerRect.width - localVideoDimensions.value.width - 10
-  const maxY = containerRect.height - localVideoDimensions.value.height - controlsHeight - 10
+  // Constrain to video container boundaries (no padding/margin)
+  const minX = 0
+  const minY = headerHeight
+  const maxX = containerRect.width - localVideoDimensions.value.width
+  const maxY = containerRect.height - localVideoDimensions.value.height - controlsHeight
   
   // Adjust position if needed
   let newX = Math.max(minX, Math.min(maxX, localVideoPosition.value.x))
@@ -1264,6 +1264,13 @@ onUnmounted(async () => {
     console.error('Cleanup error:', error)
   }
 })
+
+// Reset local video to default position and size
+const resetLocalVideo = () => {
+  localVideoPosition.value = { x: window.innerWidth - 170, y: 100 }
+  localVideoDimensions.value = { width: 160, height: 120 } // 4:3 aspect ratio (smaller default size)
+}
+
 </script>
 
 <style scoped>
