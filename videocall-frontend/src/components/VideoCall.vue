@@ -196,14 +196,16 @@
         v-if="webrtcStore.hasLocalVideo"
         :class="[
           'absolute z-20 rounded-xl overflow-hidden shadow-2xl transition-all duration-300 cursor-pointer border-2',
-          localVideoSize === 'small'
-            ? 'w-32 h-24 bottom-36 right-4'
-            : localVideoSize === 'large'
-              ? 'w-64 h-48 bottom-36 right-4'
-              : 'w-48 h-36 bottom-36 right-4',
           webrtcStore.isVideoEnabled ? 'border-green-400' : 'border-gray-600',
         ]"
-        @click="toggleLocalVideoSize"
+        :style="{
+          width: localVideoDimensions.width + 'px',
+          height: localVideoDimensions.height + 'px',
+          left: localVideoPosition.x + 'px',
+          top: localVideoPosition.y + 'px',
+        }"
+        @mousedown="startDrag"
+        @touchstart="startDrag"
       >
         <video
           ref="localVideoRef"
@@ -214,6 +216,17 @@
           :class="{ mirror: shouldMirrorLocal }"
         ></video>
 
+        <!-- Resize handle -->
+        <div
+          class="resize-handle absolute bottom-0 right-0 w-4 h-4 cursor-se-resize bg-white bg-opacity-50 rounded-tl-lg"
+          @mousedown="startResize"
+          @touchstart="startResize"
+        >
+          <svg class="w-full h-full text-gray-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0h4M4 4l5 5m11-5v4m0-4h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+          </svg>
+        </div>
+
         <!-- Local video controls overlay -->
         <div
           class="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-opacity flex items-center justify-center opacity-0 hover:opacity-100"
@@ -223,7 +236,7 @@
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
-              d="M4 8V4m0 0h4M4 4l5 5m11-5v4m0-4h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5"
+              d="M4 8V4m0 0h4M4 4l5 5m11-5v4m0-4h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5M15 12a3 3 0 11-6 0 3 3 0 016 0z"
             ></path>
           </svg>
         </div>
@@ -385,7 +398,7 @@
           title="Settings"
           @click="showSettingsModal = true"
         >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
         </button>
         
         <!-- End Call -->
@@ -641,6 +654,15 @@ const isConnecting = ref(false)
 const connectingMessage = ref(t('loading.connectingToRoom'))
 const connectingSubMessage = ref(t('loading.preparingCall'))
 
+// Draggable and resizable state for local video
+const localVideoPosition = ref({ x: window.innerWidth - 200, y: 150 })
+const localVideoDimensions = ref({ width: 192, height: 144 }) // 4:3 aspect ratio
+const isDragging = ref(false)
+const isResizing = ref(false)
+const dragStart = ref({ x: 0, y: 0 })
+const resizeStart = ref({ x: 0, y: 0, width: 0, height: 0 })
+const dragStartElement = ref({ x: 0, y: 0 })
+
 // Fullscreen and UI state
 const isFullscreenMode = ref(false)
 const shouldHideUI = ref(false)
@@ -795,6 +817,122 @@ const detectMobileView = () => {
   isMobileView.value = window.innerWidth <= 768 || /Mobi|Android/i.test(navigator.userAgent)
 }
 
+// Draggable and resizable methods for local video
+const startDrag = (event) => {
+  // Prevent dragging when clicking on resize handle or controls
+  if (event.target.closest('.resize-handle')) return
+  
+  isDragging.value = true
+  const clientX = event.touches ? event.touches[0].clientX : event.clientX
+  const clientY = event.touches ? event.touches[0].clientY : event.clientY
+  
+  dragStart.value = { x: clientX, y: clientY }
+  dragStartElement.value = { x: localVideoPosition.value.x, y: localVideoPosition.value.y }
+  
+  // Add event listeners
+  document.addEventListener('mousemove', onDrag)
+  document.addEventListener('touchmove', onDrag, { passive: false })
+  document.addEventListener('mouseup', stopDrag)
+  document.addEventListener('touchend', stopDrag)
+}
+
+const onDrag = (event) => {
+  if (!isDragging.value) return
+  
+  event.preventDefault()
+  
+  const clientX = event.touches ? event.touches[0].clientX : event.clientX
+  const clientY = event.touches ? event.touches[0].clientY : event.clientY
+  
+  const deltaX = clientX - dragStart.value.x
+  const deltaY = clientY - dragStart.value.y
+  
+  // Calculate new position
+  let newX = dragStartElement.value.x + deltaX
+  let newY = dragStartElement.value.y + deltaY
+  
+  // Boundary constraints (respecting UI boundaries as per specification)
+  const headerHeight = 60 // As per specification
+  const controlsHeight = 70 // As per specification
+  const videoContainer = document.querySelector('.flex-1.relative')
+  const containerRect = videoContainer ? videoContainer.getBoundingClientRect() : { width: window.innerWidth, height: window.innerHeight }
+  
+  // Constrain to video container boundaries with padding
+  const minX = 10
+  const minY = headerHeight + 10
+  const maxX = containerRect.width - localVideoDimensions.value.width - 10
+  const maxY = containerRect.height - localVideoDimensions.value.height - controlsHeight - 10
+  
+  newX = Math.max(minX, Math.min(maxX, newX))
+  newY = Math.max(minY, Math.min(maxY, newY))
+  
+  localVideoPosition.value = { x: newX, y: newY }
+}
+
+const stopDrag = () => {
+  isDragging.value = false
+  
+  // Remove event listeners
+  document.removeEventListener('mousemove', onDrag)
+  document.removeEventListener('touchmove', onDrag)
+  document.removeEventListener('mouseup', stopDrag)
+  document.removeEventListener('touchend', stopDrag)
+}
+
+const startResize = (event) => {
+  event.stopPropagation()
+  isResizing.value = true
+  
+  const clientX = event.touches ? event.touches[0].clientX : event.clientX
+  const clientY = event.touches ? event.touches[0].clientY : event.clientY
+  
+  resizeStart.value = {
+    x: clientX,
+    y: clientY,
+    width: localVideoDimensions.value.width,
+    height: localVideoDimensions.value.height
+  }
+  
+  // Add event listeners
+  document.addEventListener('mousemove', onResize)
+  document.addEventListener('touchmove', onResize, { passive: false })
+  document.addEventListener('mouseup', stopResize)
+  document.addEventListener('touchend', stopResize)
+}
+
+const onResize = (event) => {
+  if (!isResizing.value) return
+  
+  event.preventDefault()
+  
+  const clientX = event.touches ? event.touches[0].clientX : event.clientX
+  const clientY = event.touches ? event.touches[0].clientY : event.clientY
+  
+  const deltaX = clientX - resizeStart.value.x
+  const deltaY = clientY - resizeStart.value.y
+  
+  // Maintain 4:3 aspect ratio
+  let newWidth = resizeStart.value.width + deltaX
+  let newHeight = (newWidth / 4) * 3
+  
+  // Apply minimum and maximum size constraints
+  newWidth = Math.max(120, Math.min(400, newWidth))
+  newHeight = (newWidth / 4) * 3
+  
+  // Update dimensions
+  localVideoDimensions.value = { width: newWidth, height: newHeight }
+}
+
+const stopResize = () => {
+  isResizing.value = false
+  
+  // Remove event listeners
+  document.removeEventListener('mousemove', onResize)
+  document.removeEventListener('touchmove', onResize)
+  document.removeEventListener('mouseup', stopResize)
+  document.removeEventListener('touchend', stopResize)
+}
+
 const onFullscreenChange = (isFullscreen) => {
   console.log(`[VideoCall] onFullscreenChange: isFullscreen=${isFullscreen}, old isFullscreenMode=${isFullscreenMode.value}, old shouldHideUI=${shouldHideUI.value}`)
   isFullscreenMode.value = isFullscreen
@@ -920,13 +1058,6 @@ const handleEndCall = async () => {
       router.push('/');
     }
   }
-}
-
-const toggleLocalVideoSize = () => {
-  const sizes = ['small', 'medium', 'large']
-  const currentIndex = sizes.indexOf(localVideoSize.value)
-  const nextIndex = (currentIndex + 1) % sizes.length
-  localVideoSize.value = sizes[nextIndex]
 }
 
 const shareRoom = () => {
@@ -1068,6 +1199,17 @@ onUnmounted(async () => {
     setContainerHeight()
     detectMobileView()
   })
+
+  // Cleanup event listeners for drag and resize
+  document.removeEventListener('mousemove', onDrag)
+  document.removeEventListener('touchmove', onDrag)
+  document.removeEventListener('mouseup', stopDrag)
+  document.removeEventListener('touchend', stopDrag)
+  
+  document.removeEventListener('mousemove', onResize)
+  document.removeEventListener('touchmove', onResize)
+  document.removeEventListener('mouseup', stopResize)
+  document.removeEventListener('touchend', stopResize)
 
   // Cleanup intervals
   if (durationInterval) {
