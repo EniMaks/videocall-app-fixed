@@ -659,7 +659,7 @@ const connectingMessage = ref(t('loading.connectingToRoom'))
 const connectingSubMessage = ref(t('loading.preparingCall'))
 
 // Draggable and resizable state for local video
-const localVideoPosition = ref({ x: window.innerWidth - 170, y: 100 })
+const localVideoPosition = ref({ x: window.innerWidth - 170, y: 20 }) // Position relative to video container
 const localVideoDimensions = ref({ width: 160, height: 120 }) // 4:3 aspect ratio (smaller default size)
 const isDragging = ref(false)
 const isResizing = ref(false)
@@ -859,18 +859,19 @@ const onDrag = (event) => {
   let newX = dragStartElement.value.x + deltaX
   let newY = dragStartElement.value.y + deltaY
   
-  // Boundary constraints (allow positioning to the very edges including top and bottom)
-  const headerHeight = 60 // As per specification
-  const controlsHeight = 70 // As per specification
+  // Get the video container for boundary calculations
   const videoContainer = document.querySelector('.flex-1.relative')
-  const containerRect = videoContainer ? videoContainer.getBoundingClientRect() : { width: window.innerWidth, height: window.innerHeight }
+  if (!videoContainer) return
   
-  // Constrain to video container boundaries (no padding/margin)
+  const containerRect = videoContainer.getBoundingClientRect()
+  
+  // Constrain to video container boundaries (allow touching edges exactly)
   const minX = 0
-  const minY = headerHeight
+  const minY = 0
   const maxX = containerRect.width - localVideoDimensions.value.width
-  const maxY = containerRect.height - localVideoDimensions.value.height - controlsHeight
+  const maxY = containerRect.height - localVideoDimensions.value.height
   
+  // Ensure we can reach the exact edges
   newX = Math.max(minX, Math.min(maxX, newX))
   newY = Math.max(minY, Math.min(maxY, newY))
   
@@ -985,25 +986,17 @@ const setContainerHeight = () => {
 
 const handleWindowResize = () => {
   // Adjust local video position if it's outside the new boundaries
-  const headerHeight = 60
-  const controlsHeight = 70
+  // Get the video container for boundary calculations
+  const videoContainer = document.querySelector('.flex-1.relative')
+  if (!videoContainer) return
   
-  // Get the correct video container (use the direct parent of the local video)
-  const localVideoElement = document.querySelector('.local-video-draggable')
-  const videoContainer = localVideoElement ? localVideoElement.closest('.flex-1.relative') : document.querySelector('.flex-1.relative')
-  
-  const containerRect = videoContainer ? videoContainer.getBoundingClientRect() : { 
-    width: window.innerWidth, 
-    height: window.innerHeight - headerHeight - controlsHeight,
-    top: headerHeight,
-    left: 0
-  }
+  const containerRect = videoContainer.getBoundingClientRect()
   
   // Constrain to video container boundaries (allow touching edges exactly)
-  const minX = containerRect.left
-  const minY = containerRect.top
-  const maxX = containerRect.left + containerRect.width - localVideoDimensions.value.width
-  const maxY = containerRect.top + containerRect.height - localVideoDimensions.value.height
+  const minX = 0
+  const minY = 0
+  const maxX = containerRect.width - localVideoDimensions.value.width
+  const maxY = containerRect.height - localVideoDimensions.value.height
   
   // Adjust position if needed
   let newX = Math.max(minX, Math.min(maxX, localVideoPosition.value.x))
@@ -1250,6 +1243,19 @@ onMounted(() => {
     handleWindowResize()
   })
   
+  // Set initial position based on container size
+  setTimeout(() => {
+    const videoContainer = document.querySelector('.flex-1.relative')
+    if (videoContainer) {
+      const containerRect = videoContainer.getBoundingClientRect()
+      // Position in top-right corner with some margin
+      localVideoPosition.value = { 
+        x: containerRect.width - 180, 
+        y: 20 
+      }
+    }
+  }, 100)
+  
   // Enable auto fullscreen for mobile devices
   if (isMobileView.value && shouldAutoFullscreen.value) {
     setTimeout(() => {
@@ -1299,7 +1305,7 @@ onUnmounted(async () => {
 
 // Reset local video to default position and size
 const resetLocalVideo = () => {
-  localVideoPosition.value = { x: window.innerWidth - 170, y: 100 }
+  localVideoPosition.value = { x: 20, y: 20 } // Reset to top-left corner with small offset
   localVideoDimensions.value = { width: 160, height: 120 } // 4:3 aspect ratio (smaller default size)
 }
 
