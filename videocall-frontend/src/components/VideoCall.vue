@@ -195,8 +195,11 @@
       <div
         v-if="webrtcStore.hasLocalVideo"
         :class="[
-          'absolute z-20 rounded-xl overflow-hidden shadow-2xl transition-all duration-300 cursor-pointer border-2',
+          'absolute z-20 rounded-xl overflow-hidden shadow-2xl transition-all duration-300 cursor-pointer border-2 local-video-draggable',
           webrtcStore.isVideoEnabled ? 'border-green-400' : 'border-gray-600',
+          { 'opacity-75': isDragging || isResizing },
+          { 'dragging': isDragging },
+          { 'resizing': isResizing }
         ]"
         :style="{
           width: localVideoDimensions.width + 'px',
@@ -206,6 +209,7 @@
         }"
         @mousedown="startDrag"
         @touchstart="startDrag"
+        @dblclick="resetLocalVideo"
       >
         <video
           ref="localVideoRef"
@@ -855,7 +859,7 @@ const onDrag = (event) => {
   const headerHeight = 60 // As per specification
   const controlsHeight = 70 // As per specification
   const videoContainer = document.querySelector('.flex-1.relative')
-  const containerRect = videoContainer ? videoContainer.getBoundingClientRect() : { width: window.innerWidth, height: window.innerHeight }
+  const containerRect = videoContainer ? videoContainer.getBoundingClientRect() : { width: window.innerWidth, height: window.innerHeight - headerHeight - controlsHeight }
   
   // Constrain to video container boundaries with padding
   const minX = 10
@@ -911,9 +915,18 @@ const onResize = (event) => {
   const deltaX = clientX - resizeStart.value.x
   const deltaY = clientY - resizeStart.value.y
   
-  // Maintain 4:3 aspect ratio
+  // Maintain 4:3 aspect ratio by using the dominant axis
   let newWidth = resizeStart.value.width + deltaX
-  let newHeight = (newWidth / 4) * 3
+  let newHeight = resizeStart.value.height + deltaY
+  
+  // Determine which axis is dominant for aspect ratio maintenance
+  if (Math.abs(deltaX) > Math.abs(deltaY)) {
+    // Width change is dominant, adjust height to maintain 4:3
+    newHeight = (newWidth / 4) * 3
+  } else {
+    // Height change is dominant, adjust width to maintain 4:3
+    newWidth = (newHeight / 3) * 4
+  }
   
   // Apply minimum and maximum size constraints
   newWidth = Math.max(120, Math.min(400, newWidth))
@@ -1108,6 +1121,26 @@ const startStatsMonitoring = () => {
   }
 }
 
+const handleWindowResize = () => {
+  // Adjust local video position if it's outside the new boundaries
+  const headerHeight = 60
+  const controlsHeight = 70
+  const videoContainer = document.querySelector('.flex-1.relative')
+  const containerRect = videoContainer ? videoContainer.getBoundingClientRect() : { width: window.innerWidth, height: window.innerHeight - headerHeight - controlsHeight }
+  
+  // Constrain to video container boundaries with padding
+  const minX = 10
+  const minY = headerHeight + 10
+  const maxX = containerRect.width - localVideoDimensions.value.width - 10
+  const maxY = containerRect.height - localVideoDimensions.value.height - controlsHeight - 10
+  
+  // Adjust position if needed
+  let newX = Math.max(minX, Math.min(maxX, localVideoPosition.value.x))
+  let newY = Math.max(minY, Math.min(maxY, localVideoPosition.value.y))
+  
+  localVideoPosition.value = { x: newX, y: newY }
+}
+
 // Watch for stream changes
 watch(
   () => webrtcStore.localStream,
@@ -1182,6 +1215,7 @@ onMounted(() => {
   window.addEventListener('resize', () => {
     setContainerHeight()
     detectMobileView()
+    handleWindowResize()
   })
   
   // Enable auto fullscreen for mobile devices
@@ -1253,35 +1287,50 @@ onUnmounted(async () => {
   @apply bg-red-500 hover:bg-red-600 text-white;
 }
 
-/* Animations */
-@keyframes bounce-gentle {
-  0%,
-  20%,
-  50%,
-  80%,
-  100% {
-    transform: translateY(0);
-  }
-  40% {
-    transform: translateY(-10px);
-  }
-  60% {
-    transform: translateY(-5px);
-  }
+/* Draggable and resizable video styles */
+.dragging {
+  cursor: move !important;
+  z-index: 1000 !important;
 }
 
-.animate-bounce-gentle {
-  animation: bounce-gentle 2s ease-in-out infinite;
+.resizing {
+  cursor: se-resize !important;
+  z-index: 1000 !important;
 }
 
-/* Responsive design */
+.local-video-draggable {
+  touch-action: none;
+}
+
+.resize-handle {
+  z-index: 30;
+  pointer-events: auto;
+}
+
+.resize-handle svg {
+  pointer-events: none;
+}
+
+/* Mobile viewport adjustments */
 @media (max-width: 768px) {
-  .control-button {
-    @apply p-4;
+  .mobile-header {
+    padding: 12px 16px;
   }
 
-  .control-button svg {
-    @apply w-6 h-6;
+  .mobile-controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    padding: 12px 16px;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+  
+  /* Adjust local video size for mobile */
+  .local-video-mobile {
+    width: 120px !important;
+    height: 90px !important;
   }
 }
 
@@ -1308,23 +1357,6 @@ onUnmounted(async () => {
 .ui-fade-in {
   transition: opacity 0.3s ease-in;
   opacity: 1;
-}
-
-/* Mobile viewport adjustments */
-@media (max-width: 768px) {
-  .mobile-header {
-    padding: 12px 16px;
-  }
-
-  .mobile-controls {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 10;
-    padding: 12px 16px;
-    padding-bottom: calc(12px + env(safe-area-inset-bottom));
-  }
 }
 
 /* Fullscreen overlay styles */
